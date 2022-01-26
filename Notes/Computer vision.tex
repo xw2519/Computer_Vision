@@ -373,4 +373,334 @@ replacing the centre pixel using the \textit{median value} in the window.
     \includegraphics[width=10cm]{Median filter.JPG}
 \end{figure}
 
-\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Image Filtering II}
+
+The concept of filtering can be described mathematically for example: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Filter_mathematical_example 1.JPG}
+\end{figure}
+where this operations can be described as:
+$$
+    g[n] = \frac{1}{3} . f[n-1] + \frac{1}{3} . f[n] + \frac{1}{3} . f[n+1]
+$$
+
+This concept of describing filters mathematically is extensively used in Signal
+Processing where it describes filters as:
+\begin{center}
+    \textit{A device/process '$h$' that removes unwanted components/features from a input
+    signal '$f$' and generates an output signal '$g$'}
+\end{center}
+
+\section*{Impulse Response}
+
+Impulse responses are used to mathematically describe a filter. The impulse
+response $h$ is the output of a filter when the input is an impulse signal $\delta$. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=5cm]{Impulse response.JPG}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Continuous signal}: An impulse signal is the \textit{Dirac
+    Delta function} $\delta(x)$:
+    \begin{gather*}
+        \delta(x) = \begin{cases}
+            +\infty & \text{if } x = 0 \\
+            0 & \text{otherwise}
+        \end{cases} \\
+        \int^{\infty}\delta (x) dx = 1
+    \end{gather*}
+
+    \item \textbf{Discrete signal}: An impulse signal is the \textit{Kronecker
+    function} $\delta[i]$: 
+    \begin{gather*}
+        \delta[i] = \begin{cases}
+            1 & \text{if } i = 0 \\
+            0 & \text{otherwise}
+        \end{cases}
+    \end{gather*}
+\end{itemize}
+
+The impulse response $h$ completely characterises a \textit{linear
+time-invariant} filter. Because any input signal can be form using impulses, if
+one knows how the system may response to one impulse then you know how the system
+will response to many impulses. 
+
+\pagebreak
+
+\textbf{Time-invariant system}: If a filter is a \textit{time-invariant system},
+when the input is shifted by time step $k$, the output will also shift by $k$.
+In the following example, note how the impulse response for $f[n]$ and $f[n-2]$
+are the same but only shifted by $2$ in a LTI system.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Impulse response shift 1.JPG} \\
+    \includegraphics[width=8cm]{Impulse response shift 2.JPG}
+\end{figure}
+
+\textbf{Linear system}: If a filter is a \textit{linear system},
+when the input is multiplied by $k$, the output will also by multiplied by $k$.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Linear response.JPG} \\ 
+    \includegraphics[width=8cm]{Linear response 2.JPG} 
+\end{figure}
+
+Similarly, if a filter is a linear system, when combining two input signals linearly,
+their outputs will also be combined linearly.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Linear combined.JPG}
+\end{figure}
+
+\section{Convolution and Linear Time-invariant System (LTI)}
+
+For a linear time-invariant system, the impulse response $h$ completely
+characterises how the LTI system works. The output $g$ can be described as the
+\textit{convolution} between input $f$ and impulse response $h$:
+$$
+    g[n] = f[n] * h[n] = \sum_{m=-\infty}^\infty f[m]h[n-m]
+$$
+
+Convolutions are usually implemented by: 
+\begin{enumerate}
+    \item Flip the kernel 
+    \item Multiply the signal with the flipped kernel 
+    \item Sum over the support of the kernel 
+\end{enumerate}
+$$
+    \sum_{m=-\infty}^\infty f[m]h[n-m] = \sum_{m=-\infty}^\infty f[n+m]h[-m]
+$$
+
+\subsection{Propoerties of convolution}
+\begin{itemize}
+    \item \textbf{Commutativity}: $f * h = h * f$
+    \item \textbf{Associativity}: $f * (g * h) = (f * g) * h$
+    \item \textbf{Distributivity}: $f * (g + h) = (f * g) + (f * h)$
+    \item \textbf{Differentiation}: $\frac{d}{dx} (f * g) = \frac{df}{dx}*g = f*\frac{dg}{dx}$
+\end{itemize}
+
+\subsection{2D convolution}
+
+2D convolution is defined mathematically as:
+$$
+    g[m,n] = f[m,n] * h[m,n] = \sum_{i=-\infty}^\infty \sum_{j=-\infty}^\infty f[i,j]h[m-i, n-j]
+$$
+
+2D convolutions are usually implemented by: 
+\begin{enumerate}
+    \item Flip the kernel both horizontally and vertically 
+    \item Multiply the image patch centred at pixel $(m,n)$ with the flipped kernel
+    \item Sum over the support of the kernel
+\end{enumerate}
+$$
+    g[m,n] = f[m,n] * h[m,n] = \sum_{i=-\infty}^\infty \sum_{j=-\infty}^\infty f[m+i, n+j]h[-i,-j]
+$$
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{2D convolution.JPG}
+\end{figure}
+
+\subsection{Asspciativity and separable filters}
+
+Note the associativity property of convolution:
+$$
+    f*(g*h) = (f*g)*h
+$$
+If a big filter can be separated as the convolution of two small filters, such
+as $g*h$, then it is possible to first convolve $f$ with $g$ then with $h$.
+$$
+    f*filter_{big} = f*(g*h) = (f*g)*h
+$$
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Associativity and separable.JPG}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Edge Detection I}
+
+In computer vision, an edge refers to lines where image brightness changes
+sharply and has discontinuities. Edges capture important properties of the world
+and are important low-level features for analysing and understanding images.
+
+To detect edges, we note that an image can be regarded as a function of pixel
+position. As known from mathematics, derivatives characterises the
+discontinuities of a function which can be used to help detect edges. For
+example, consider the definition of a continuous function:
+$$
+    f'(x) = \lim_{h \rightarrow 0} \frac{f(x+h) - f(x)}{h}
+$$
+\begin{figure}[h]
+    \centering
+    \subfloat[\centering Continuous function]{{\includegraphics[width=5cm]{Edge derivative 1.JPG}}}%
+    \qquad
+    \subfloat[\centering Differentiated function showing detected discontinuity]{{\includegraphics[width=5cm]{Edge derivative 2.JPG}}}%
+\end{figure}
+ 
+For a discrete function, the finite difference can be calculated using:
+\begin{itemize}
+    \item Forward difference: $f'[x] = f[x+1] - f[x]$
+    \item Backward difference: $f'[x] = f[x] - f[x-1]$
+    \item Central difference: $f'[x] = \frac{f[x+1] - f[x-1]}{2}$
+\end{itemize}
+
+This finite difference can be performed using convolution with kernals such as:
+\begin{itemize}
+    \item $h=[1,-1,0]$
+    \item $h=[0,1,-1]$
+    \item $h=[1,0,-1]$
+\end{itemize}
+
+\section{Convolution}
+
+As mentioned earlier, convolution is often implemented:
+$$
+    g[n] = f[n] * h[n] = \sum_{m=-\infty}^\infty f[n-m]h[m] = \sum_{m=-\infty}^\infty f[n+m]h[-m]
+$$
+
+The \textit{central difference}, without accounting for $\frac{1}{2}$, can be
+defined as:
+\begin{align*}
+    f'[x] &= f[x+1] - f[x-1] \\
+    &= f[x+1] *1 + f[x] * 0 + f[x-1] * (-1) \\
+    &= f[x+1] * h[-1] + f[x] * h[0] + f[x-1] * h[1] 
+\end{align*}
+
+The convolution kernal is this defined as: $h = [1,0,-1]$. The process of
+convolution with central difference $f'[x] = f[x] * h[x]$ can be seen as shown below: 
+\begin{figure}[h]
+    \centering
+    \subfloat{{\includegraphics[width=8cm]{Edge convolution 1.JPG}}}%
+    \qquad
+    \subfloat{{\includegraphics[width=8cm]{Edge convolution 2.JPG}}}%
+\end{figure}
+
+Note the following:
+\begin{itemize}
+    \item The kernal $h[n]$ is flipped $h[-n]$ as mentioned earlier on how
+    convolution implemented
+    \item Large derivatives denote discontinuities 
+\end{itemize}
+
+The following methods only enable discontinuities to be detected in 1D. Similar
+filters have to be designed to extend edge detection to a 2D image.
+
+\section{Edge detection filters}
+
+\subsection{Prewitt filter}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=5cm]{Prewitt.JPG}
+    \hspace{2cm}
+    \includegraphics[width=6cm]{Prewitt separable.JPG}
+\end{figure}
+
+\subsection{Sobel filter}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=5cm]{Sobel 1.JPG}
+    \hspace{2cm}
+    \includegraphics[width=6cm]{Sobel 2.JPG}
+\end{figure}
+
+\section{Image Gradient}
+
+There are two outputs from Sobel filters that are combined to describe edges:
+\begin{itemize}
+    \item describing discontinuity along x-axis
+    \item describing discontinuity along y-axis
+\end{itemize}
+
+The two outputs are combined to describe the two properties of edges: \textit{Magnitude} 
+and \textit{Orientation} using the following process:
+\begin{enumerate}
+    \item Compute the derivatives along x-axis and y-axis:
+    \begin{align*}
+        g_x = f * h_x \\
+        g_y = f * h_y
+    \end{align*}
+        
+    \item Compute the magnitude of the gradient:
+    $$
+        g = \sqrt{g_x^2 + g_y^2}
+    $$
+
+    \item Compute the orientation or angle of the gradient:
+    $$
+        \theta = \arctan2(g_y, g_x)
+    $$
+\end{enumerate}
+
+\section{Smoothing}
+
+Derivatives are sensitive to noise thus using a smoothing kernel beforehand to
+suppress the noise would result in a better result. This can be seen in the
+Prewitt and Sobel filter which have a smoothing kernel built in. 
+
+An alternative is to use the Gaussian kernel for smoothing before calculating
+the derivatives. The following images show the ease of edge detection after
+smoothing compared to no smoothing performed beforehand.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Smoothing 1.JPG}
+    \hspace{1cm}
+    \includegraphics[width=8cm]{Smooth 2.JPG}
+\end{figure}
+
+\subsection{Derivative of Gaussian Filter}
+
+\textit{Derivative of Gaussian filter} is an operator that performs Gaussian
+smoothing before taking the derivative. 
+\begin{gather*}
+    g[x] = \frac{1}{\sqrt{2\pi} \sigma}e^{-\frac{x^2}{2\sigma^2}} \quad \text{Gaussian kernel} \\
+    \frac{d}{dx}(f * h) \quad \text{Derivative of Gaussian filter}
+\end{gather*}
+
+Using the differentiation of convolution:
+$$
+    \frac{d}{dx}(f*h) = \frac{df}{dx} * h = f * \frac{dh}{dx} 
+$$
+
+The analytical form for the derivative of Gaussian kernel can be defined as:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=5cm]{Gaussian derivative.JPG}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=9cm]{Derivative gaussian.JPG}
+\end{figure}
+
+\pagebreak
+
+\begin{itemize}
+    \item 1D Gaussian filter: $h[x] = \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{x^2}{2\sigma^2}}$ 
+    \item 2D Gaussian filter: $h[x, y] = \frac{1}{2\pi\sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}}$ 
+\end{itemize}
+
+It is a separable filter and equivalent to convolution of two 1D Gaussian
+filters. This means that 2D Gaussian smoothing can be accelerated using
+separable filtering. 
+
+The process of a Gaussian Derivative Filter is defined as:
+\begin{enumerate}
+    \item Smooth the input image with a 2D Gaussian filter 
+    \item Take the derivative along x-axis and y-axis 
+    \item Calculate the magnitude and orientation 
+\end{enumerate}
+
+\subsubsection{Parameter $\sigma$ in derivative of Gaussian}
+Large $\sigma$ value suppresses noise and results smoother derivative. Different
+$\sigma$ values finds edges at different scales. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{Gaussian derivative sigma.JPG}
+\end{figure}
+
+
+
+
+\end{document}   
