@@ -700,6 +700,837 @@ $\sigma$ values finds edges at different scales.
     \includegraphics[width=12cm]{Gaussian derivative sigma.JPG}
 \end{figure}
 
+\chapter{Edge Detection II}
+
+As mentioned earlier, edge detection is a fundamental problem in image
+processing and computer vision that aims to identify points in an image that are
+edges i.e. where discontinuities occur. 
+
+There are two solutions to the problem:
+\begin{itemize}
+    \item \textbf{Canny approach}: Know explicitly the criteria of edge points,
+    can design computational procedures to satisfy these 
+    \item \textbf{Machine Learning}: Collect data which represent what to achieve e.g.
+    manually drawn edge maps and train a machine learning model to map from images
+    to final outputs.
+\end{itemize}
+
+\section{Canny Edge Detection}
+
+John Canny defines a good edge detector:
+\begin{itemize}
+    \item \textbf{Good detection}: Low probability of failing to mark real edge
+    points and falsely marking non-edge points 
+    \item \textbf{Good localisation}: Points marked as edge points by operator
+    should be as close as possible to the centre of the true edge 
+    \item \textbf{Single response}: Only one response to a single edge 
+\end{itemize}
+
+Canny edge detection algorithm is summarised into the following:
+\begin{enumerate}
+    \item Perform Gaussian filtering to suppress noise
+    \item Calculate the gradient magnitude and direction
+    \item Apply \textit{non-maximum suppression} (NMS) to get a single response for each edge
+    \item Perform \textit{hysteresis thresholding} to find potential edges
+\end{enumerate}
+
+\subsection{Gaussian filtering}
+
+Gaussian filtering is performed to smooth image and suppress noise. The effect
+of smoothing can be adjusted by the parameter $\sigma$ in the Gaussian kernel.
+$$
+    h(x,y) = \frac{1}{2\pi \sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}}
+$$
+
+The effect of Gaussian smoothing parameter $\sigma$ on edge detection is:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Gaussian smoothing.JPG}
+\end{figure}
+
+The choice of $\sigma$ depends on desired edge detection behavior:
+\begin{itemize}
+    \item Large $\sigma$: Detects large-scale edges and smooths out fine details.
+    \item Small $\sigma$: Detects fine features.
+\end{itemize}
+
+\subsection{Image gradient}
+
+The image gradient is calculated after Gaussian filtering. Common filters are
+\textit{Prewitt} and \textit{Sobel}.
+
+\subsection{Non-maximum suppression (NSM)}
+
+The aim of NMS is to get a single response for an edge. The main concept of NMS:
+Edge occurs where the gradient magnitude reaches the maximum. 
+
+The NMS process is defined:
+\begin{enumerate}
+    \item Check whether a pixel $q$ is a local maximum along the gradient direction
+    \item Move to pixel $r$ and compare the gradient magnitudes between $q$ and $r$
+    \item Move to pixel $p$ and compare the gradient magnitudes between $q$ and $p$
+    \item If pixel $q$ is the local maximum, it is an edge point and suppress
+    the other pixels, i.e. non-maximum pixels
+    $$
+        M(x,y) = \begin{cases}
+            M(x,y) & \text{if local maximum} \\
+            0 & \text{otherwise}
+        \end{cases}
+    $$
+\end{enumerate}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=3cm]{NMS_1.JPG}
+    \hspace{1cm}
+    \includegraphics[width=3cm]{NMS_2.JPG}
+\end{figure}
+
+In implementation, we need to perform image interpolation for pixels $p$ and
+$r$, if they are not located on the pixel lattice using nearest neighbour or
+linear interpolation.
+
+\subsection{Thresholding}
+
+Thresholding is performed to ensure edges have high magnitudes. When performing
+NMS for all pixels on the gradient magnitude map, many pixels may have low
+magnitude even though it is a local maxima. 
+
+The simplest thresholding methods replace each pixel in an image with a black
+pixel if the image intensity $I_{i,j}$ is less than some fixed constant $T$
+(that is $I_{i,j} < T$), or a white pixel if the image intensity is greater than that
+constant. This is the method of segmenting images. 
+$$
+    \text{binary}(x,y) = \begin{cases}
+        1 & \text{if} I(x,y) \leq t \\
+        0 & \text{otherwise}
+    \end{cases}
+$$
+
+From a grayscale image, thresholding can be used to create binary images. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=5cm]{Thresholding_1.JPG}
+    \hspace{1cm}
+    \includegraphics[width=5cm]{Thresholding_2.JPG}
+\end{figure}
+
+A common alternative is \textbf{Hysteresis thresholding} which is done by the
+canny edge detector. 
+
+\subsubsection{Hysteresis Thresholding}
+
+Hysteresis thresholding defines two thresholds $t_{low}$ and $t_{high}$ for edge
+detection:
+\begin{itemize}
+    \item If a pixel's gradient magnitude is $\leq t_{high}$, pixel is accepted as an edge pixel.
+    \item If a pixel’s gradient magnitude is $< t_{low}$, pixel is rejected.
+    \item If it is in between, it is a weak edge pixel i.e. may be an edge or may not be.
+    \begin{itemize}
+        \item Check neighbouring pixels, pixel is accepted if it is connected to an edge pixel
+    \end{itemize}
+\end{itemize}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=7cm]{Hysteresis thresholding.JPG}
+\end{figure}
+
+The result can be seen in the image:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=9cm]{Process hysteresis.JPG}
+\end{figure}
+
+\subsection{Canny Edge Detection and its goals}
+
+John Canny's initial goal is achieved by:
+\begin{itemize}
+    \item \textbf{Good detection}: 
+    \begin{itemize}
+        \item Gaussian smoothing to suppress noise (reducing false positives)
+        \item Hysteresis thresholding to find weak edges (reducing false negatives)
+    \end{itemize}
+    \item \textbf{Good localisation}:
+    \begin{itemize}
+        \item Finding the location of edges using non-maximum suppression, which is based on gradient
+        magnitude and direction
+    \end{itemize}
+    \item \textbf{Single response}:
+    \begin{itemize}
+        \item Non-maximum suppression (NMS)
+    \end{itemize}
+\end{itemize}
+
+\section{Improving Edge Detection}
+
+The Canny Edge Detection approach is designed by the following approach:
+\begin{enumerate}
+    \item Think of what criteria edges need to satisfy
+    \item Carefully design the \textit{image features} (e.g. Gaussian filtering + image gradient)
+    and \textit{procedures} (e.g. NMS, hysteresis thresholding) to achieve that criteria.
+\end{enumerate}
+
+There are many improvements that can be made in improving edge detection accuracy such as:
+\begin{itemize}
+    \item Utilising richer features, e.g. colour, texture
+    \item Integrating multi-scale features
+    \item Enforcing smoothness
+    \item Machine learning, e.g. learning the mapping from image to edge directly from paired data
+\end{itemize}
+
+\subsection{Learning-based Edge detection}
+
+Develop a machine learning model for edge detection based on:
+\begin{itemize}
+    \item Assuming that paired data (images $x$ + manually defined edge maps
+    $y$) are available
+    \item Common problem is how to find a model $f$ that maps $x$ to $y$, i.e. $y=f(x|\theta)$ , where
+    $\theta$ denotes the model parameters
+\end{itemize}
+
+For example, consider this model:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Learning-based approach.JPG}
+    \caption{The colourful blocks are a machine learning model (e.g. neural
+    network) that maps an input image into an edge map.}
+\end{figure}
+
+This machine learning model integrates features from multiple scales, fusing
+fine-scale edges with coarse-scale edges to form the final output. This is
+vastly different compared to the Canny edge detector which only uses a single
+scale for edge detection, controlled by the Gaussian parameter $\sigma$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Hough Transform}
+
+With edge detection,a binary edge map which contains a lot of
+edge points is obtained. If these edge points belong to a line, how is a parametric
+representation of the line obtained? 
+
+Hough transform is a transform from image space to parameter space e.g. from an
+edge map to the two parameters of a line. The result is a parametric model,
+given the input edge points. The aim of this transform is to detect shapes and
+objects by a voting procedure.
+
+Advantage:
+\begin{itemize}
+    \item It detects multiple instances.
+    \item Robust to image noise.
+    \item Robust to occlusion.
+\end{itemize}
+
+Limitations:
+\begin{itemize}
+    \item The computational complexity can be high. For each edge point, we need to vote to
+    a 2D or even 3D parameter space.
+    \item Need to carefully set some parameters, such as the parameters for the edge
+    detector, the threshold for the accumulator or the range of circle radius
+\end{itemize}
+
+\section{Line parameterisation}
+
+A line can be represented in several forms:
+\begin{itemize}
+    \item Slope intercept form: 
+    $$
+        y = mx + b
+    $$
+    where $m$ is the \textit{gradient} and $b$ is the \textit{y-axis intercept}
+
+    \item Double intercept form: 
+    $$
+        \frac{x}{a} + \frac{y}{b} = 1
+    $$
+    where $a$ is the \textit{x-intercept} and $b$ is the \textit{y-intercept} 
+
+    \item Normal form: 
+    $$
+        x\cos(\theta) + y\sin(\theta) = \rho
+    $$
+    where $\theta$ is the \textit{angle} and $\rho$ is the \textit{distance from origin}  
+\end{itemize}
+
+\section{Model fitting}
+
+A common alternative to Hough transform is to fit a line model onto edge points:
+\begin{itemize}
+    \item Suppose there is set of points $(x_1, y_1), (x_2, y_2), \dots$ to fit
+    a line model $y = mx + c$
+    \item $m$ and $b$ can be estimated by minimising the fitting error: 
+    $$
+        \text{min}_{m,b} \sum_i [y_i - (mx_i + b)]^2
+    $$
+    where:
+    \begin{itemize}
+        \item $y_i$ - Real $y$ of a point 
+        \item $mx_i + b$ - $\hat{y}$ estimated by our line model 
+    \end{itemize}
+\end{itemize}
+
+\pagebreak
+
+\section{Hough Transform}
+
+Define the slope intercept form for a line model:
+$$
+    y = mx + b \rightarrow b = y - mx
+$$
+
+Each edge points in the image space $(x_1, y_1), (x_2, y_2), (x_3, y_3), ...$
+votes for a line model in the parameter space e.g. the first point will vote
+for $b = y_1 - mx_1$
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Hough transform.JPG}
+\end{figure}
+
+With this, the parameter space is divided into 2D bins where each point
+increments the vote by 1 in one of the bins as seen below:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=3cm]{Hough bins.JPG}
+\end{figure}
+
+The problem with the slope intercept form is that the parameter space is too
+large where $m \in [-\infty, \infty]$ and $b \in [-\infty, \infty]$. Alot of
+bins would be needed.
+
+The solution is to use the \textit{normal form} $x\cos(\theta) + y\sin(\theta) =\
+\rho$ where $\theta \in [0, \pi)$ and $\rho \in [-\infty, \infty]$. Note that
+although $rho$ is infinite, it is technically limited by the image size.   
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Normal Hough.JPG}
+    \caption{Conversion from \textit{slope intercept} to \textit{normal form}}
+\end{figure}
+
+\subsection{Line detection by Hough transform}
+
+The algorithm is defined as:
+\begin{enumerate}
+    \item Initialise bins $H(\rho, \theta)$ to all zeros 
+    \item For each edge point $(x,y)$:
+    \begin{enumerate}
+        \item For $\theta$ from $0$ to $\pi$: 
+        \begin{itemize}
+            \item Calculate $\rho = x\cos(\theta) + y\sin(\theta)$
+            \item Accumulate $H(\rho, \theta) = H(\rho, \theta) + 1$
+        \end{itemize}
+    \end{enumerate}
+    \item Find $(\rho, \theta)$ where $H(\rho, \theta)$ is a \textit{local maximum} and
+    larger than a \textit{threshold} 
+    \begin{itemize}
+        \item Local maximum is chosen as it is similar to NMS in edge detection 
+        \item Thresholding is required as a few random points would not lead to
+        a line being detected 
+    \end{itemize}
+    \item Detected lines are defined by $\rho = x\cos(\theta) + y\sin(\theta)$
+\end{enumerate}
+
+This approach is different from model fitting where $(m,b)$ is defined by:
+$$
+    \text{min}_{m,b} \sum_i [y_i - (mx_i + b)]^2
+$$
+where only one line will be detected. 
+
+\textbf{Shapes}: Unlike model fitting, Hough Transform can simultaneously detect multiple lines
+as long as the lines are local maxima above a threshold. This allows Hough
+transform to detect other shapes such as Ellipses, Planes in 3D space etc
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Hough ex1.JPG}
+\end{figure}
+
+\textbf{Noise}: Hough transform is robust to noise. An edge map is often generated after image
+smoothing and broken edge points can still vote and contribute to line detection.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Hough ex2.JPG}
+\end{figure}
+
+\textbf{Occlusion}: Hough transform is robust to object occlusion e.g. rectangle
+covered by a bunny. The remaining edge points vote and contribute to line
+detection. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Hough ex3.JPG}
+\end{figure}
+
+\section{Circle detection}
+
+Hough Transform can be used to detect other shapes such as circles. The circle
+canbe parameterised as:
+$$
+    (x-a)^2 + (y-b)^2 = r^2
+$$
+where the image space $(x,y)$ is transformed into the parameter space $(a,b,r)$. 
+
+\pagebreak
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Circle.JPG}
+\end{figure}
+
+If the radius $r$ is known, then for each edge point $(x,y)$, there is only the
+need to vote for possible values of $(a,b)$ i.e. still in parameter space $H(a,b)$. 
+
+\section{Circle detection by Hough Transform}
+
+The algorithm is defined as:
+\begin{enumerate}
+    \item Initialise the bins $H(a, b, r)$ to all zeros
+    \item For each possible radius $r \in [r_{min}, r_{max}]$
+    \begin{itemize}
+        \item For each edge point $(x, y)$
+        \begin{itemize}
+            \item Let $\theta$ to be gradient direction, or opposite gradient direction
+            \item Calculate $a = x - r\cos(\theta), b = y - r\sin(\theta)$
+            \item Accumulate $H(a,b,r) = H(a,b,r) + 1$
+        \end{itemize}
+    \end{itemize}
+    \item Find $(a,b,r)$ where $H(a,b,r)$ is a local maximum and larger than a threshold
+    \item Detected circles are defined: $x = a + r\cos(\theta), y = b + r\sin(\theta)$
+\end{enumerate}
+
+\section{Generalised Hough Transform Idea}
+
+\textbf{Weights}: When voting in the parameter space, it is possible to add
+\textit{weights}. Instead of using equal vote for each edge point, the vote can be weighted
+by the gradient magnitude so stronger edge points get higher weights.
+
+\textbf{Spaces}:  There are two spaces, the image space and the parameter space
+i.e. Hough space.
+\begin{itemize}
+    \item If the shape can be described by some parameters using an analytical equation, we
+    use this equation to perform voting to the parameter space
+    \item If it is not a simple shape without an analytical equation, as long as we have a model
+    to describe it, we can still vote
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Interest Point Detection I}
+
+Interest points (keypoints, landmarks, low-level features) are image points
+useful for subsequent image processing and analysis such as Image
+classification, Image matching, Image retrieval etc. Interest points are mostly
+corners or blobs, where local image structures are rich. 
+
+\section{Facial Image Analysis}
+
+A common use of interest points where interest points (landmarks) can be defined
+to represent a face.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{Face interest points.JPG}
+    \caption{Examples of landmarks representing a human face}
+\end{figure}
+
+These interest points are used to detect faces and the locations of interest
+points can be used for mood analysis, augmented reality etc. 
+
+\section{Image matching (Image alignment, Image registration)}
+
+Image matching can be used to stitch images together by overlaying the matching
+parts. The correspondance i.e. similarity between two images can be found using three methods:
+\begin{itemize}
+    \item Pixels: Using \textit{all} information 
+    
+    Optimising a similarity metric based on all image pixels:
+    $$
+        \text{max}_T Similarity(Image_A, Image_B(T))
+    $$
+    where $T$ denotes spatial transformation
+
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=8cm]{matching pixels.JPG}
+    \end{figure}
+
+    \pagebreak
+
+    \item Edges: Using \textit{some} information 
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=8cm]{matching edges.JPG}
+    \end{figure}
+
+    \item Interest points: Using \textit{very little but important} information 
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=8cm]{matching interest point.JPG}
+    \end{figure}
+\end{itemize}
+
+\section{Interest Point Detection}
+
+Interest points are generally corners i.e. intersections of edges and the Harris Corner Detector is an
+algorithm that could detect it.
+
+\subsection{Harris Corner Detection}
+
+Edge detection works by calculating the magnitude of image gradient at each
+pixel. Edge pixels correspond to high magnitude of gradient.
+
+The difference in corner detection is that edge detection methods could not
+differentiation between edge and corner pixels. But, by using a small window,
+the difference between edge pixels and corner pixels could be detected. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{window dection.JPG}
+\end{figure}
+
+By shifting the window and calculating the change of intensities for the window:
+\begin{itemize}
+    \item \textbf{Edges}: Change of intensity along just one direction 
+    \item \textbf{Corner}: Change of intensity along both direction
+\end{itemize}
+
+\pagebreak
+
+Mathematics can be used to describe the change of pixel intensities in a given
+window $W$. Given a window shifting by $[u, v]$, the change intensities is given by:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Harris math.JPG}
+\end{figure}
+where the window function $w(x,y)$ can be a Step or Gaussian function  
+
+\subsection{Change of Intensities}
+
+A small shift $[u,v]$ is defined with the following bilinear approximation 
+$$
+    E(u,v) \approx [u,v] . M . \begin{bmatrix}
+        u \\
+        v
+    \end{bmatrix}
+$$
+where $M$ is a $2 \times 2$ matrix derived from the window function and product
+of image derivatives 
+$$
+    M = \sum_{x,y} w(x,y) \begin{bmatrix}
+        I_x^2 & I_x I_y \\ 
+        I_x I_y & I_y^2
+    \end{bmatrix}
+$$
+
+Based on $
+E(u,v) \approx [u,v] . M . \begin{bmatrix}
+    u \\
+    v
+\end{bmatrix}
+$: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=4cm]{Flat.JPG}
+    \hspace{1cm}
+    \includegraphics[width=4cm]{Edge.JPG}
+    \hspace{1cm}
+    \includegraphics[width=4cm]{Corner.JPG}
+\end{figure}
+\begin{itemize}
+    \item $M = \begin{bmatrix}
+        0 & 0 \\ 
+        0 & 0
+    \end{bmatrix}$: Flat region 
+
+    \item $M = \begin{bmatrix}
+        10 & 0 \\ 
+        0 & 0.1
+    \end{bmatrix}$: Edge - A large change if shifting window along $u$ but little
+    change along $v$ 
+
+    \item $M = \begin{bmatrix}
+        10 & 0 \\ 
+        0 & 10
+    \end{bmatrix}$: Corner - A large change whichever way window shift occurs 
+\end{itemize}
+
+If $M$ is more complicated, the matrix $M$ can be made simpler by performing
+eigen decomposition by using the face that eigenvectors are orthogonal to each
+other. Since $M$ is a real symmetrical matrix, $M$ can be
+decomposed by 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=6cm]{decomposition.JPG}
+\end{figure}
+
+\pagebreak
+\subsection{Intepreting Eigenvalues}
+
+Getting the two eigen values of hessian matrix for all points will show the
+category of that point.  
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=7cm]{Corner eigen.JPG}
+\end{figure}
+
+Corners are defined by eigenvalues are defined variously such as $R = \lambda_1
+\lambda_2 - k(\lambda_1 + \lambda_2)^2$, $R = \text{min}(\lambda_1, \lambda_2)$,
+$R= \frac{\lambda_1 \lambda_2}{\lambda_1 + \lambda_2 + \in}$, etc
+
+\subsection{Cornerness}
+
+Since only the values $\lambda_1 \lambda_2$ and $\lambda_1 + \lambda_2$, there
+is no need to perform eigen-decomposition. Instead the properties of matrix
+determinant and trace of $M = P \Lambda P^T$ defined as:
+$$
+    R = \text{det}(M) - k(\text{trace}(M))^2
+$$
+can be used:
+\begin{gather*}
+    \text{det}(M) = \text{det}(P \Lambda P^T) = \text{det}(\Lambda) = \lambda_1 \lambda_2 \\ 
+    \text{trace}(M) = \text{trace}(P \Lambda P^T) = \text{trace}(\Lambda) = \lambda_1 + \lambda_2
+\end{gather*} 
+
+\section{Harris Detector}
+
+This detector finds strong responses at corners, blobs and textures.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Harris detector.JPG}
+\end{figure}
+
+Algorithm:
+\begin{enumerate}
+    \item Compute $x$ and $y$ derivatives of an image 
+    \begin{gather*}
+        I_x = G_x * I \\ 
+        I_y = G_y * I
+    \end{gather*}
+    
+    \item At each pixel, compute the matrix $M$
+    \begin{gather*}
+        M = \sum_{x,y} w(x,y) \begin{bmatrix}
+            I_x^2 & I_x I_y \\ 
+            I_x I_y & I_y^2
+        \end{bmatrix}
+    \end{gather*}
+
+    \item Calculate the detector response 
+    $$
+        R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2
+    $$
+
+    \item Detect interest points which are local maxima and whose response $R$
+    are above a threshold.
+\end{enumerate}
+
+\subsection{Properties}
+
+\textbf{Invariant to rotation}: Harris detector is rotation-invariant i.e. if a
+corner is rotated, you can still get the same change of intensities when you
+shift the window along a rotated direction. 
+
+\textbf{Not invariant to scale}: Harris corner detector is not invariant to
+scale. However, we can apply Harris detector at multiple scales and find the
+response at the most suitable scale.
+
+Multi-scale images are obtained through:
+\begin{itemize}
+    \item Gaussian smoothing with different $\sigma$
+    \item Sampling with different spatial resolutions
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Interest Point Detection II}
+
+\section{Scale}
+
+The Harris detector is not invariant to scale as seen in this following example:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=4cm]{Harris scale.JPG}
+\end{figure}
+
+Different scales are required as images convolved with Gaussian kernels of
+different $\sigma$ provide information at different scale as seen below:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=14cm]{Harris different scale.JPG}
+    \caption{Harris detector response when different Gaussian kernels are used for calculating image derivatives}
+\end{figure}
+
+How the scale is determined at each pixel is the problem. The goal is to be able
+to choose a scale such that the region that looks most like a corner
+\textbf{results in a high Harris detector response}.
+
+\subsection{Response at different scales}
+
+The Harris detector response is calculated using the eigenvalues of $M$
+$$
+    M = \sum_{x,y} w(x,y) = \begin{bmatrix}
+        I_x^2(\sigma) & I_x(\sigma) I_y(\sigma) \\ 
+        I_x(\sigma) I_y(\sigma) & I_y^2(\sigma)
+    \end{bmatrix}
+$$
+which are in turn determined by the derivatives $I_x(\sigma)$ and $I_y(\sigma)$.
+The derivatives are inversely proportional to scale $\sigma$  i.e. the larger
+the scale $\sigma$, the smaller the derivatives magnitude.
+
+\pagebreak
+
+\subsection{Derivatives at different scales}
+
+Consider two signals $f(x)$ and $g(x)$ which are related by $f(x) = g(sx)$ i.e.
+only differing by scale $s$ and have the same peak magnitude.  This can happen,
+for example, when a picture of the same object is taken with different zoom
+factors.  
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{Different zoom.JPG}
+\end{figure}
+
+The peak magnitudes of the calculated derivatives differ as well
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{Derivative peak.JPG}
+\end{figure}
+
+The relationship between the two derivatives are defined as:
+$$
+    \frac{df}{dx} = s . \frac{dg}{dx} |_{sx}
+$$
+This equation shows that to make the derivative magnitude comparable across
+scales, multiply the derivative by its scale $s$. The same object will give same
+magnitude of response, regardless of the zoom factor.
+
+\subsection{Scale adapted Harris detector}
+
+The scale adapted Harris detector is defined as 
+$$
+    M = \sum_{x,y} w(x,y) \begin{bmatrix}
+        \sigma^2 I_x^2(\sigma) & \sigma^2 I_x(\sigma) I_y(\sigma) \\
+        \sigma^2 I_x(\sigma)I_y(\sigma) & \sigma^2 I_y^2(\sigma)
+    \end{bmatrix} = \sum_{x,y}w(x,y) \sigma^2 \begin{bmatrix}
+        I_x^2(\sigma) & I_x(\sigma) I_y(\sigma) \\
+        I_x(\sigma)I_y(\sigma) &  I_y^2(\sigma)
+    \end{bmatrix}
+$$
+
+At each pixel, determine the scale which gives the largest detector response (e.g. at this scale, it looks most like a corner)
+
+The \textit{scale adapted Harris detector} composes of two steps:
+\begin{itemize}
+    \item Calculates the scale adapted detector response for a series of
+    $\sigma$, from small-scale to large-scale
+    
+    \item Perform interest point detection and look for local maxima both
+    across space and across scale
+\end{itemize}
+
+The algorithm, \textbf{for each $\sigma$}, is defined as:
+\begin{enumerate}
+    \item Perform Gaussian smoothing with $\sigma$
+    \item Calculate the $x$ and $y$ derivatives of the smoothed image
+    $I_x(\sigma)$ and $I_y(\sigma)$
+    \item At each pixel, compute the matrix $M$
+    $$
+        M = \sum_{x,y}w(x,y) \sigma^2 \begin{bmatrix}
+            I_x^2(\sigma) & I_x(\sigma) I_y(\sigma) \\
+            I_x(\sigma)I_y(\sigma) &  I_y^2(\sigma)
+        \end{bmatrix}
+    $$
+    \item Calculate the detector response
+    $$
+        R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2
+    $$
+    \item Detect interest points which are local maxima across both scale and space
+    and whose response $R$ are \textbf{above a threshold}.
+\end{enumerate}
+
+\section{Other interest point detectors}
+
+\subsection{Laplacian of Gaussian (LoG)}
+
+The Laplacian is the sum of second derivatives. For 2D image, it is
+$$
+    \Delta f = \bigtriangledown^2 f = \frac{\sigma^2 f}{\sigma x^2} + \frac{\sigma^2 f}{\sigma y^2}
+$$
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Laplacian.JPG}
+\end{figure}
+
+Note that the second derivative is more sensitive to noise. For this reason, the
+image is smoothed using a Gaussian kernel before calculating the Laplacian. 
+\begin{gather*}
+    \text{Laplacian: } \Delta f = \frac{\sigma^2 f}{\sigma x^2} + \frac{\sigma^2 f}{\sigma ^2y} \\
+    \text{LOG: } \Delta(f*h) = \frac{\sigma^2(f*h)}{\sigma x^2} + \frac{\sigma^2 (f*h)}{\sigma y^2}
+\end{gather*}
+
+The analytical form for the LoG kernel is defined as:
+\begin{gather*}
+    \text{LoG: } \Delta(f*h) = \frac{\sigma^2(f*h)}{\sigma x^2} + \frac{\sigma^2(f*h)}{\sigma y^2} = f*\left(\frac{\sigma^2 h}{\sigma x^2} + \frac{\sigma^2 h}{\sigma y^2}\right)
+\end{gather*}
+
+Noting that 2D Gaussian is defined as $h(x,y) = \frac{1}{2\pi \sigma^2}
+e^{-\frac{x^2 + y^2}{2\sigma^2}}$, the LoG can be derived 
+\begin{gather*}
+    \frac{\sigma^2 h}{\sigma x^2} + \frac{\sigma^2 h}{\sigma y^2} = -
+    \frac{1}{\pi \sigma^4} \left(1 - \frac{x^2 + y^2}{2\sigma^2}\right) e^{-\frac{x^2 + y^2}{2\sigma^2}}
+\end{gather*}
+
+Similarly to Harris detector, if we want to determine the optimal scale at
+each pixel, we need to make sure the LoG response is comparable between
+scales. 
+
+The LoG response at scale $\sigma$ is defined as:
+$$
+    LoG(x,y,\sigma) = I_{xx}(x,y,\sigma) + I_{yy}(x,y,\sigma)
+$$
+
+The normalised LoG response at scale $\sigma$ is defined as:
+$$
+    LoG_{norm}(x,y,\sigma) = \sigma^2(I_{xx}(x,y,\sigma) + I_{yy}(x,y,\sigma))
+$$
+
+\subsection{Difference of Gaussian (DoG)}
+
+Difference of Gaussians (DoG) filter is defined as
+$$
+    DoG(x,y,\sigma) = I * G(k \times \sigma) - I * G(\sigma)
+$$
+where $k$ is a arbitary constant e.g. $k=\sqrt{2}$
+
+DoG approximates the normalised Laplacian of Gaussian (LoG)
+$$
+    LoG_{norm}(x,y,\sigma) = \sigma^2(I_{xx}(x,y,\sigma) + I_{yy}(x,y,\sigma))
+$$
+
+DoG is a good approximation to the normalised Laplacian of Gaussian (LoG). It
+provides some convenience in calculating the response across different
+scales. 
+
+\subsection{Summary of interest point detectors}
+\begin{itemize}
+    \item Scale-variant
+    \begin{itemize}
+        \item Harris detector
+    \end{itemize}
+
+    \item Scale-invariant
+    \begin{itemize}
+        \item Scale adapted Harris detector
+        \item Normalised Laplacian of Gaussian
+        \item Difference of Gaussian
+    \end{itemize}
+
+    The scale-invariant detectors follow similar procedures:
+    \begin{itemize}
+        \item Calculate the detector response across scales
+        \item Find local extrema both across scale and across space
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=11cm]{Interest point summary.JPG}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Feature Description I}
 
 
 
