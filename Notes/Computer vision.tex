@@ -1532,6 +1532,101 @@ scales.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Feature Description I}
 
+Feature description describes the feature for each point so that the points can
+be compared and matched. 
+
+\section{Descriptors}
+
+There are several types of descriptors:
+\begin{itemize}
+    \item Pixel intensity
+    \item Patch intensities 
+    \item Gradient orientation 
+    \item Histogram 
+    \item SIFT descriptor
+\end{itemize}
+
+\subsection{Pixel intensity}
+
+Describes features using intensity of a single pixel. 
+
+Problems:
+\begin{itemize}
+    \item Sensitive to absolute intensity value. Intensity of the same point
+    will change under different illumination.  
+    \item Not discriminative. The grayscale intensity ranges from 0 to 255. There are
+    thousands of pixels with exactly the same intensity.
+\end{itemize}
+
+\subsection{Patch intensities}
+
+Better than single pixel intensity and represents the local pattern. This
+performs well if the images are of similar intensities and roughly aligned. 
+
+\textbf{Problems}:
+\begin{itemize}
+    \item Sensitive to absolute intensity value 
+    \item Not rotation-invariant 
+\end{itemize}
+
+\subsection{Gradient orientation}
+
+This type is robust to changes in intensity. 
+
+\textbf{Problem}:
+\begin{itemize}
+    \item Not rotation invariant 
+\end{itemize}
+
+\subsection{Histogram}
+
+The intensity histogram of a patch. This is robust ot rotation and scaling. 
+
+\textbf{Problem}:
+\begin{itemize}
+    \item Sensitive to intensity changes 
+\end{itemize}
+
+\section{SIFT algorithm}
+
+Combination of the gradient orientation (robust to intensity changes) and
+histogram (robust to rotation and scaling). The algorithm is used for detecting
+and describing local features in images. 
+
+This algorithm transforms an image into a large set of interest points, each of which is
+described by a feature vector that is invariant to translation, scaling and
+rotation.
+
+The SIFT algorithm is defined into the following steps:
+\begin{enumerate}
+    \item Detection of scale-space extrema [Detection]
+    \item Keypoint localisation 
+    \item Orientation assignment [Description] 
+    \item Keypoint descriptor 
+\end{enumerate}
+
+\subsection{Detection of scale-space extrema}
+
+Search across scales and pixel locations, looking for interest points.
+Difference of Gaussian (DoG) filter is used to identity potential interest
+points.
+$$
+    DoG(x,y,\sigma) = I * G(k \sigma) - I * G(\sigma)
+$$
+
+The difference of Gaussian for different scales $\sigma$ is calculated from fine
+to coarse e.g. $\sigma, \sqrt{2}\sigma, 2\sigma, ...$. This is implemented as
+first calculating a stack of Gaussian smoothed images then calculating their
+differences.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{G to DoG.JPG}
+\end{figure}
+
+\subsection{Keypoint localisation}
+
+
+
 
 
 \end{document}   

@@ -1,6 +1,6 @@
-\title{\vspace{-2.0cm} 60006 - Tutorial 1
+\title{\vspace{-2.0cm} 60006 - Tutorial 2
 
-Image Formation, Image Filtering}
+Edge Detection, Hough Transform}
 \author{
         Xin Wang
 }
@@ -12,256 +12,206 @@ Image Formation, Image Filtering}
 \usepackage{graphicx}  
 \usepackage[parfill]{parskip}
 
+\graphicspath{{Images/}}
+
 \setlength{\parindent}{0em}
 
 \begin{document}
 \maketitle
 
 \section*{Question 1}
-Let $(x, y)$ be the coordinate of a point in an image. Its homogeneous coordinate $(x, y, 1)$ is often
-used in computer vision or graphics, for example, transforming an image by scaling, translation,
-rotation etc. The transformation can be described by the following equation:
-\begin{equation*}
-    \begin{pmatrix}
-        x' \\
-        y' \\
-        1 
-    \end{pmatrix} = A . 
-    \begin{pmatrix}
-        x \\
-        y \\
-        1
-    \end{pmatrix}
-\end{equation*}
-where $(x, y, 1)$ and $(x', y', 1)$ denote the coordinate before and after transformation, $A$ is a 3x3
-transformation matrix. For the following examples of $A$, describe what kind of transformation it
-performs.
-\\
-\\
-\textbf{1.1: Example 1}: 
-\begin{equation*}
-    \begin{pmatrix}
-        x' \\
-        y' \\
-        1 
-    \end{pmatrix} = 
-    \begin{pmatrix}
-        1 & 0 & 10 \\
-        0 & 1 & 5 \\
-        0 & 0 & 1
-    \end{pmatrix} . 
-    \begin{pmatrix}
-        x \\
-        y \\
-        1
-    \end{pmatrix}
-\end{equation*}
 
-Calculating the following equation results in:
-\begin{align*}
-    \begin{pmatrix}
-        x' \\
-        y' \\
-        1 
-    \end{pmatrix} &= 
-    \begin{pmatrix}
-        1 & 0 & 10 \\
-        0 & 1 & 5 \\
-        0 & 0 & 1
-    \end{pmatrix} . 
-    \begin{pmatrix}
-        x \\
-        y \\
-        1
-    \end{pmatrix} \\ &=
-    \left(\begin{matrix}
-        1x+0y+10 \\
-        0x+1y+5 \\
-        0x+0y+1
-    \end{matrix}\right) \\ &=
-    \left(\begin{matrix}
-        x+10 \\
-        y+5 \\
-        1
-    \end{matrix}\right)
-\end{align*}
+The horizontally and vertically flipped kernels are defined as:
+$$
+ h_{x_{flipped}} = \begin{bmatrix}
+     -1 & 0 & 1 \\
+     -1 & 0 & 1 \\
+     -1 & 0 & 1
+ \end{bmatrix} \quad \text{ and } \quad h_{y_{flipped}} = \begin{bmatrix}
+    -1 & -1 & -1 \\
+    0 & 0 & 0 \\
+    1 & 1 & 1
+\end{bmatrix} 
+$$
 
-This corresponds to a \textit{translation transformation} that shifts a pixel
-$10$ in the $x$-axis and $5$ in the $y$-axis. 
-\\
-\\
-\textbf{1.2: Example 2}: 
-\begin{equation*}
-    \begin{pmatrix}
-        x' \\
-        y' \\
-        1 
-    \end{pmatrix} = 
-    \begin{pmatrix}
-        5 & 0 & 0 \\
-        0 & 5 & 0 \\
-        0 & 0 & 5
-    \end{pmatrix} . 
-    \begin{pmatrix}
-        x \\
-        y \\
-        1
-    \end{pmatrix}
-\end{equation*}
+\textbf{Question 1.1:} If we use zero padding at the boundary pixels, what is gradient magnitude of the second row
+after being convolved by 3x3 Prewitt filter kernels?
 
-Calculating the following equation results in:
-\begin{align*}
-    \begin{pmatrix}
-        x' \\
-        y' \\
-        1 
-    \end{pmatrix} &= 
-    \begin{pmatrix}
-        5 & 0 & 0 \\
-        0 & 5 & 0 \\
-        0 & 0 & 5
-    \end{pmatrix} . 
-    \begin{pmatrix}
-        x \\
-        y \\
-        1
-    \end{pmatrix} \\ &=
-    \left(\begin{matrix}
-        5x+0y+0 \\
-        0x+5y+0 \\
-        0x+0y+5
-    \end{matrix}\right) \\ &=
-    \left(\begin{matrix}
-        5x \\
-        5y \\
-        5
-    \end{matrix}\right)
-\end{align*}
-This corresponds to a \textit{scaling transformation} that zooms the image
-$5$ in the $x$-axis and $5$ in the $y$-axis i.e. zooming the image 5 times.
+Convolution on the second row:
+$$
+    g_x = f * h_{x_{flipped}} 
+$$
+$$
+\begin{bmatrix}
+    12 & 15 & 33 & 51 & 90 & 75 & 21 & -150
+\end{bmatrix}
+$$
+$$
+    g_y = f * h_{y_{flipped}} 
+$$
+$$
+\begin{bmatrix}
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+$$
+
+Gradient magnitude:
+$$
+    g = \sqrt{g_x^2 + g_y^2}
+$$
+$$
+\begin{bmatrix}
+    12 & 15 & 33 & 51 & 90 & 75 & 21 & 150
+\end{bmatrix}
+$$
+
+\textbf{Question 1.2:} If we use replicate padding (padding using the same value as the boundary pixel), what is the
+gradient magnitude of the second row?
+
+Convolution on the second row:
+$$
+    g_x = f * h_{x_{flipped}} 
+$$
+$$
+\begin{bmatrix}
+    3 & 15 & 33 & 51 & 90 & 75 & 21 & 6
+\end{bmatrix}
+$$
+$$
+    g_y = f * h_{y_{flipped}} 
+$$
+$$
+\begin{bmatrix}
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+$$
+
+Gradient magnitude:
+$$
+    g = \sqrt{g_x^2 + g_y^2}
+$$
+$$
+\begin{bmatrix}
+    3 & 15 & 33 & 51 & 90 & 75 & 21 & 6
+\end{bmatrix}
+$$
+
+\textbf{Question 1.2:} If we use replicate padding and the 3x3 Sobel filter, what is the result? 
+
+The Sobel filters kernels are defined as:
+$$
+ h_{x} = \begin{bmatrix}
+     1 & 0 & -1 \\
+     2 & 0 & -2 \\
+     1 & 0 & -1
+ \end{bmatrix} \quad \text{ and } \quad h_{y} = \begin{bmatrix}
+    1 & 2 & 1 \\
+    0 & 0 & 0 \\
+    -1 & -2 & -1
+\end{bmatrix} 
+$$
+
+The horizontally and vertically flipped kernels are defined as:
+$$
+ h_{x_{flipped}} = \begin{bmatrix}
+     -1 & 0 & 1 \\
+     -2 & 0 & 2 \\
+     -1 & 0 & 1
+ \end{bmatrix} \quad \text{ and } \quad h_{y_{flipped}} = \begin{bmatrix}
+    -1 & -2 & -1 \\
+    0 & 0 & 0 \\
+    1 & 2 & 1
+\end{bmatrix} 
+$$
+
+Convolution on the second row:
+$$
+    g_x = f * h_{x_{flipped}} 
+$$
+$$
+\begin{bmatrix}
+    4 & 20 & 44 & 68 & 120 & 100 & 28 & 8
+\end{bmatrix}
+$$
+$$
+    g_y = f * h_{y_{flipped}}
+$$
+$$
+\begin{bmatrix}
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{bmatrix}
+$$
+
+Gradient magnitude:
+$$
+    g = \sqrt{g_x^2 + g_y^2}
+$$
+$$
+\begin{bmatrix}
+    4 & 20 & 44 & 68 & 120 & 100 & 28 & 8
+\end{bmatrix}
+$$
 
 \section*{Question 2}
-For a RGB image, at each pixel, there are intensity values for three channels (R: red; G: green; B:
-blue). For example, $[255, 0, 0]$ represents pure red. $[0, 255, 0]$ represents pure green. $[0, 0, 255]$
-represents pure blue. Each channel is represented by an integer between $0$ and $255$, i.e. an 8-bit
-unsigned char.
-\\
-\\
-\textbf{2.1:} For a RGB image of size $1280 \times 960$ pixels, without image compression, how many bytes are
-needed for storing the image?
-\\
-\\
-In a $1280 \times 960$ image, there are $1228800$ pixels. Each pixel needs to represent
-a three channels which is represented by $8 \times 3$ bits. In totals there are:
-\begin{align*}
-    1228800 \text{ pixels} \times 24 &= 29491200 \text{ bits} \\ 
-    &= 3686400 \text{ bytes}
-\end{align*}
 
-\textbf{2.2:} There are algorithms to convert a RGB image into a grayscale image, where each pixel only
-has one intensity value, which represents the brightness. For example, one algorithm is
-recommended by ITU-R Recommendation BT.601, which is formulated as the following
-equation,
-$$
-    Y = 0.299R + 0.587G + 0.114B
-$$
-Could you work out what grayscale values pure red, pure green and pure blue respectively
-convert to?
-\\
-\\ 
-Pure Red: $\text{RGB} = [255, 0, 0]$ and grayscale is $[76.245, 0, 0]$
-Pure Green: $\text{RGB} = [0, 255, 0]$ and grayscale is $[0, 149.685, 0]$
-Pure Blue: $\text{RGB} = [0, 0, 255]$ and grayscale is $[0, 0, 29.07]$
+Calculate the gradient direction for the pixel in the centre using the Prewitt filters.
+\begin{gather*}
+    g_x = f * h_x = 10 \\ 
+    g_y = f * h_y = -10
+\end{gather*}
 
-\pagebreak
+Gradient direction:
+$$
+    \arctan(\frac{g_y}{g_x}) = -45\deg
+$$
 
 \section*{Question 3}
 
-Suppose that we have an image that is corrupted by Gaussian white noise $Y = I +n$, where $I$
-denotes the clean image, $n \sim N(0, \sigma^2)$ denotes the Gaussian white noise and $Y$ denotes the
-corrupted image. 
+The following points appear in an edge map: $(-2, -3), (-1, -1), (0, 1), (1, 3), (4, 9)$.
+We would like to use the Hough transform to estimate a line model from the points. 
+\begin{itemize}
+    \item Find the line model parameters for these points. You can use the
+    figure below (abscissa: $m$, ordinate: $b$) to do this.
 
-Performing image filtering using a low-pass filter is one approach for
-denoising, but it may also result in loss of fine details. Another approach is
-to denoising is to take a lot of images of the same object and then combine them. For
-example, you can take a lot of pictures of the moon in the sky from the same
-angle. Each image is described by $Y_i = I + n_i(i = 1,2,..., N)$, where $n_i$ is one
-independent realisation of the noise. Then you can take the average, $Y =
-\frac{1}{N} \sum_{i=1}^N Y_i$. 
+    \begin{align*}
+        (-2,-3) &\rightarrow b = -3 + 2x \\
+        (-1,-1) &\rightarrow b = -1 + 1x \\
+        (0,1) &\rightarrow b = 1 \\
+        (1,3) &\rightarrow b = 3 - x \\
+        (4,9) &\rightarrow b = 9 - 4x    
+    \end{align*}
 
-Please derive the mean and variance of the noise in the combined image $Y$.
+    \pagebreak
 
-The noise in the combined image $e$ is defined as:
-\begin{align*}
-    e &= Y - I \\
-    &= \frac{1}{N} \sum_{i=1}^N n_i
-\end{align*}
+    \item Please sketch the corresponding lines in the parameter space using the slope intercept form for the line model
+    $y = mx + b$, i.e. $b = y - mx$.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=8cm]{Q3.JPG}
+    \end{figure}
 
-Since each independent realisation of noise is of type Gaussian white noise, the
-mean of the noise in the comnbined image is: 
-\begin{align*}
-    E[e] &= \frac{1}{N}\sum_{i=1}^N E[n_i] \\
-    &= 0
-\end{align*}
-
-The variance is calculated by:
-\begin{align*}
-    var[e] &= E[(e - E[e])^2] \\ 
-    &= \frac{1}{N} \sigma^2
-\end{align*}
-
+    The lines sintersect at $(2, 1)$. So the fitted line model is $y = 2x + 1$.
+\end{itemize}
+ 
 \section*{Question 4}
 
-Consider a 2D Gaussian filter:
+Expand the loss function:
 $$
-    h(x, y) = \frac{1}{2\pi \sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}}
+    E(\beta) = Y^T - 2X^T \beta^T Y + X^T \beta^T X \beta 
 $$
 
-\textbf{4.1:} Derive the first derivative: $\frac{\partial h}{\partial x}$ and
-$\frac{\partial h}{\partial y}$
+Differentiating:
+$$
+    \frac{\partial E}{\partial \beta} = -2X^T Y + 2X^T X \beta
+$$
 
+To get the optimum, let $\frac{\partial E}{\partial \beta} = 0$:
 \begin{align*}
-    \frac{\partial h}{\partial x} = -\dfrac{x\mathrm{e}^{-\frac{x^2+y^2}{2{\sigma}^2}}}{2{\pi}{\sigma}^4} \\
-    \frac{\partial h}{\partial y} = -\dfrac{y\mathrm{e}^{-\frac{y^2+x^2}{2{\sigma}^2}}}{2{\pi}{\sigma}^4}
+    -2X^T Y + 2X^T X \beta = 0 \\ 
+    \beta = \frac{X^T Y}{X^T X}
 \end{align*}
 
-\textbf{4.2:} The Gaussian filter has an infinitive support. People often
-truncate and approximate the filter. 
 
-Please check that whether the 2D Gaussian filter is equivalent o the convolution
-of a 1D Gaussian filter along x-axis and a 1D Gaussian filter along y-axis. 
-
-1D Gaussian filter along $x$-axis is $[1/6, 2/3, 1/6]$ and along $y$-axis is $\begin{bmatrix}
-    1/6 \\ 2/3 \\ 1/6
-\end{bmatrix}$. It is equivalent to the 2D Gaussian filter. 
-
-\textbf{4.3:} What is the computational cost when we convolve an $N \times N$
-image with a 3x3 2D Gaussian filter?
-\begin{itemize}
-    \item At each pixel, there are $K \times K$ (9) multiplications and $K^2 -
-    1$ (8) summations
-    \item In total, there are $N^2K^2$ multiplications and $N^2(K^2 - 1)$
-    summations 
-    \item Complexity is $O(N^2 K^2)$
-\end{itemize}
-
-\textbf{4.4:} What is the computational cost when we convolve an $N \times N$
-image with two 1D Gaussian filters, respectively with size 1x3 and 3x1? 
-\begin{itemize}
-    \item At each pixel, there are $K$ multiplications and $K - 1$ summations
-    \item In total, there are $2 N^2K$ multiplications and $2 N^2(K - 1)$
-    summations 
-    \item Complexity is $O(N^2 K)$
-\end{itemize}
-
-\textbf{4.5:} In general, what is the computational cost when we convolve an $N
-\times N$ image with a $K \times K$ 2D Gaussian filter? Use the big O notation.
-\begin{itemize}
-    \item At each pixel, there are $K \times K$ multiplications and $K^2 - 1$ summations
-    \item In total, there are $N^2K^2$ multiplications and $N^2(K^2 - 1)$
-    summations 
-    \item Complexity is $O(N^2 K^2)$
-\end{itemize}
 
 \end{document}
 
