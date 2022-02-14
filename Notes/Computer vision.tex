@@ -1756,4 +1756,264 @@ For each iteration:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Feature Description II}
 
+As mentioned earlier the SIFT descriptor at each interest point is formed by
+concatenating the histograms of gradient orientations for 16 subregions.
+However, calculating the gradient magnitudes and orientations is computationally
+slow. 
+
+\section{Faster feature description}
+
+SIFT can be improved using two approaches:
+\begin{itemize}
+    \item \textbf{Hardware}: Use faster hardware e.g. FPGA instead of CPU 
+    \item \textbf{Software}: Improving software or algorithm e.g. decomposing
+    pipeline into several steps, and reconsider and evaluate each step
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=8cm]{Pipeline.JPG}
+    \end{figure}
+\end{itemize}
+
+\subsection{Speeded-Up Robust Features (SURF)}
+
+SIFT uses histograms of gradient orientations for describing local features. To
+accelerate computation, there is no need to calculate gradients for arbitrary
+orientations. SURF only calculates the gradients along with horizontal
+and vertical directions using the Haar wavelets.
+
+SURF applies very simple filters $d_x$ and $d_y$ (Haar wavelets) onto the
+sample points to calculate gradients along $x$ and $y$.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{SURF.JPG}
+\end{figure}
+
+\pagebreak
+
+The dimensions of the SURF descriptor:
+\begin{itemize}
+    \item $4 \times 4$ subregions 
+    \item $4$ elements per subregion 
+    \item Feature descriptor: $16$ subregions $\times$ $4$ elements $= 64$
+\end{itemize}
+
+\subsection{Binary Robust Independent Elementary Features (BRIEF)}
+
+When we use Haar wavelets in SURF, we compare a local region to another and calculate the difference,
+which is a floating point number.
+
+In BRIEF, we compare a point $p$ to another point $q$ and get a binary value as
+output:
+$$
+    \tau(p,q) = \begin{cases}
+        1 & \text{if} I(p) < I(q) \\ 
+        0 & \text{otherwise}
+    \end{cases}
+$$
+
+BRIEF:
+\begin{enumerate}
+    \item Randomly sample $n_d$ pairs of points for binary tests
+    \begin{itemize}
+        \item The random pattern is determined only once. Afterwards, the same pattern is
+        always applied to all interest points.
+    \end{itemize}
+
+    \item If $n_d = 256$, perform 256 tests and each test gives 1 bit (0 or 1)
+    \item BRIEF descriptor is described as a $n_d$-dimensional bitstring e.g. $[1,0,0,...]$
+\end{enumerate}
+
+Assuming $n_d = 256$, the BRIEF descriptor is $256$-bit long i.e. $32$ bytes
+long. This is shorter than SIFT (512 bytes) and SURF (256 bytes). This makes
+BRIEF faster since:
+\begin{itemize}
+    \item Only compare two numbers, without calculating the gradient orientation
+    (SIFT) or intensity difference (SURF)
+    \item When comparing two BRIEF descriptors, it is also faster as we do not
+    need to calculate the Euclidean distance
+    \item BRIEF ignores rotation- and scale-invariance. It assumes that the images are taken from a moving camera that only
+    involves translation, and it does not account for rotation or scaling.
+    BRIEF uses a upright window of fixed size (e.g. 48 x 48) for sampling. 
+\end{itemize}
+
+\subsubsection{Fast to compute the BRIEF descriptor}
+
+For example, to perform 8 binary tests and get one byte of descriptor:
+\begin{align*}
+descriptor &= ((I(p 1 ) < I(q 1 )) << 7) + ((I(p 2 ) < I(q 2 )) << 6) + ((I(p 3 ) < I(q 3 )) << 5) \\
+&+ ((I(p 4 ) < I(q 4 )) << 4) + ((I(p 5 ) < I(q 5 )) << 3) + ((I(p 6 ) < I(q 6 )) << 2) \\
+&+ ((I(p 7 ) < I(q 7 )) << 1) + ((I(p 8 ) < I(q 8 )) << 0)
+\end{align*}
+where $p$ and $q$ are pre-defined sampling points and $<< n$ means shifting bit
+by $n$ places 
+
+\subsubsection{Fast to compare two BRIEF descriptors}
+
+When performing image matching and comparing two BRIEF descriptors, measure
+their difference using the Hamming distance. Hamming distance can be computed
+very efficiently with a bitwise $XOR$ operation followed by a bit count 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=7cm]{Compare BRIEF.JPG}
+\end{figure}
+
+\section{Histograms of Oriented Gradient (HOG)}
+
+HOG is similar to SIFT. They both use gradient orientation histograms for
+feature description, the only difference is that HOG describes features for a large image region,
+instead of just around a point. 
+
+By describing a full image, we are able to perform image classification based on
+image features e.g. does it contain a human or not or retrieve similar images.
+
+The idea of HOG is that it divides a large region into a dense grid of cells,
+describes each cell, then concatenate these local descriptions to form a
+global description:
+\begin{itemize}
+    \item Divide the image into equally spaced cells
+    \begin{itemize}
+        \item Each cell contains $8 \times 8$ pixels
+        \item 4 cells form a block
+    \end{itemize}
+
+    The orientation histograms of this block describes a section of this image
+    
+    \item Move to the next block and similarly describe the content there using
+    orientation histograms. Note there is an overlap between blocks.
+
+    \item For each block, the descriptor vector $v$ (concatenation of 4 histograms) is normalised:
+    $$
+        v_{norm} = \frac{v}{\sqrt{||v||^2_2 + \epsilon^2}}
+    $$
+
+    \item The HOG descriptor is formed by concatenating the normalised local
+    descriptors for all blocks to describe a full image 
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Image Classification I}
+
+As previously mentioned, it is possible to describe the global feature of an
+image. Based on this, it is possible to start talking about \textit{image
+classification}.
+
+\section{How image classification works}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{image classification.JPG}
+\end{figure}
+
+The image dataset is split into two parts:
+\begin{itemize}
+    \item Training set - Training the classifier  
+    \item Test set - Evaluating the performance of the classifier on data never seen
+\end{itemize}
+
+When learning with training set, there are several types:
+\begin{itemize}
+    \item Supervised learning: Labels are available for training data 
+    \item Unsupervised learning: Labels are not available, clustering is often
+    for classification 
+    \item Semi-supervised learning: Labels are available for parts of the
+    training data
+\end{itemize}
+
+\subsection{Preprocessing}
+
+Several processing is done such as:
+\begin{itemize}
+    \item Detect where the digit is in a much bigger image
+    \item Normalise the size of each digit 
+    \item Normalise the location, place the mass centre of the digit in the centre of the image
+    \item Sometimes, slant correction may also be performed, which shifts each row in the
+    image so that the principal axis becomes vertical
+\end{itemize}
+
+\subsection{Image classification}
+
+Feature extraction includes:
+\begin{itemize}
+    \item Hand-crafted (e.g. pixel intensities, HOG, or other manually defined
+    feature descriptors)
+    \item Learnt features (e.g. CNN, automatically learnt by the algorithm)
+\end{itemize}
+
+The classifier can have several types:
+\begin{itemize}
+    \item K nearest neighbours (KNN)
+    \item Support vector machine
+    \item Neural network 
+\end{itemize}
+
+\section{K-nearest neighbours (KNN)}
+
+It is a non-parametric classifier:
+\begin{itemize}
+    \item $K=1$: Each test data point is assigned the class of its nearest neighbour
+    \item $K>1$: Compute K nearest neighbours and the test data point is
+    assigned the class given by majority voting.
+\end{itemize}
+
+In KNN, neighbours are defined by a \textit{distance metric} between data points
+$x$ and $y$. There are many types of distance metrics:
+\begin{itemize}
+    \item Euclidean distance
+    \item Cosine distance
+    \item Euclidean distance ($L^2$ norm) 
+    \item Manhattan distance ($L^1$ norm)
+\end{itemize}
+
+KNN have advantages and disadvantages:
+\begin{itemize}
+    \item Advantage:
+    \begin{itemize}
+        \item No training step at all
+        \item Simple but effective
+        \item Multi-class classification
+    \end{itemize}
+
+    \item Disadvantage:
+    \begin{itemize}
+        \item Storage and search are expensive
+    \end{itemize}
+\end{itemize}
+
+Computational-wise, KNN has $N$ training images and $M$ test images. At test
+time, the computational cost to classify $M$ test images is
+$$
+    O(MN)
+$$
+
+\subsection{Hyperparameter $K$}
+
+Hyperparameters like $K$ value are problem dependent and are established through
+parameter tuning.
+
+\subsubsection{Cross-validation}
+
+A common practice is to split the training set into 2 parts: a training set and
+a validation set, then tune the hyper-parameters on the validation set.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{cross.JPG}
+\end{figure}
+
+The dataset split is summarised into:
+\begin{itemize}
+    \item Training set: training the model
+    \item Validation set: deciding what type of model and which hyperparameters are the
+    best
+    \item Test set: getting a final estimate of model performance
+\end{itemize}
+
+It is expected the test performance to be possibly worse than the validation
+performance
+\begin{itemize}
+    \item The reason is that we have been trying hard to fit our model onto the validation set,
+    not the test set. They may have different distributions
+\end{itemize}
+
+
+
 \end{document}   
