@@ -699,7 +699,6 @@ $\sigma$ values finds edges at different scales.
     \centering
     \includegraphics[width=12cm]{Gaussian derivative sigma.JPG}
 \end{figure}
-
 \chapter{Edge Detection II}
 
 As mentioned earlier, edge detection is a fundamental problem in image
@@ -1625,8 +1624,136 @@ differences.
 
 \subsection{Keypoint localisation}
 
+SIFT can be improved to refine the localisation and scale by fitting a model
+onto nearby data which can improve the accuracy for image matching:
+\begin{itemize}
+    \item A quadratic function is fitted to the DoG response of neighbouring pixels  
+    \item Location and scale of extremum for this quadratic function can be
+    estimated 
+\end{itemize}
 
+Denote the DoG response by $D(x,y,\sigma)$ or $D(x)$ where $x = (x,y,\sigma)^T$
+is a 3D vector containing both location and scale. The refined estimate is
+defined as: 
+$$
+    \Delta x = - \frac{\partial^2 D}{\partial x^2}^{-1} \frac{\partial D}{\partial x} 
+$$
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{Keypoint.JPG}
+\end{figure}
 
+\subsection{Orientation assignment}
 
+Assigns a consistent orientation to each keypoint, based on local image
+properties. As a result, the feature descriptor can be represented relative to
+this orientation and achieve invariance to image rotation.
+
+The key idea being that if the orientation of the image, it is possible to
+sample in a rotated coordinate system before calculating features. The dominant
+orientation $\theta$ for a neighbourhood of a keypoint found by:
+\begin{itemize}
+    \item Calculate the gradient orientation for pixels in this
+    neighbourhood 
+    \item An orientation histogram with 36 bins covering 360 degrees is
+    created 
+    \item Each pixel votes for an orientation bin, weighted by the gradient
+    magnitude 
+    \item Keypoint will be assigned an orientation that is the peak of the
+    histogram 
+\end{itemize}
+
+\subsection*{Local image descriptor}
+
+With sample points, it is possible to describe the local image content through:
+\begin{itemize}
+    \item Pixel intensities 
+    \item Gradient orientations 
+    \item Histograms 
+\end{itemize}
+
+SIFT uses the histogram of gradient orientations:
+\begin{itemize}
+    \item Calculate the gradient magnitudes and orientations for these sampling
+    points. Orientations are calculated relative to the dominant orientation $\theta$
+    \item Create a histogram of gradient orientations
+\end{itemize}
+
+In practice, \textit{subregions} are used and each subregion has $4 \times 4$ samples:
+\begin{itemize}
+    \item Each subregion will have one orientation histogram
+    \item Obtain a number of histograms, which together describe what it looks
+    like around the keypoint
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm]{local image 1.JPG}
+    \hspace{1cm}
+    \includegraphics[width=8cm]{local image 2.JPG}
+\end{figure}
+
+This descriptor is robust to rotation, scaling and change of illuminations:
+\begin{itemize}
+    \item Consideration of dominant orientation
+    \item A sampling window proportional to scale
+    \item Use of gradient orientations for feature description
+    \item Use of histograms
+\end{itemize}
+
+\subsection{Keypoint matching}
+
+Keypoints between two images are matched by identifying the nearest neighbours:
+\begin{itemize}
+    \item For each keypoint in image A, identify its nearest neighbours in the database of
+    keypoints for image B
+    \item The distance is defined by the Euclidean distance of SIFT descriptors
+\end{itemize}
+
+The exact neighbours do not need to be found. There are faster algorithms for
+finding approximate nearest neighbours.
+
+\pagebreak
+
+After nearest neighbour search, a keypoint is found $(x,y)$ in image A
+corresponds to another keypoint $(u,v)$ in image B, the images are related by an
+affine transformation:
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=5cm]{affine.JPG}
+\end{figure}
+
+For many pairs of corresponding keypoints, the equation can be written as a
+linear system
+$$
+    Am = b
+$$
+where $m$ - unknown affine parameters 
+
+The least-square solution to the linear system is defined by the Moore-Penrose inverse:
+$$
+    m = (A^T A)^{-1} A^T b
+$$
+which minimises the squared difference $||Am - b||^2$
+
+Once the affine parameters are solved, we know the spatial transformation between the two images.
+
+\section{RANSAC}
+
+The squared difference $||Am - b||^2$ is sensitive to outliers. To improve the robustness of matching, we can
+employ methods which consider outliers in model fitting, such as Random Sample
+Consensus (RANSAC).
+
+For each iteration:
+\begin{enumerate}
+    \item Select random sample points 
+    \item Fit a model 
+    \item Based on the model, check how many points are inliers 
+    \item Terminate after a certain number of iterations or enough inliners have been
+    found 
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Feature Description II}
 
 \end{document}   
