@@ -1,0 +1,125 @@
+\documentclass{article} 
+
+\usepackage[margin=0.5in]{geometry} 
+\usepackage{amsmath} 
+\usepackage{graphicx}  
+\usepackage[parfill]{parskip}
+
+\setlength{\parindent}{0cm}
+
+\newcommand{\sol}{\textbf{Solution}:} 
+\newcommand{\maketitletwo}[2][]{\begin{center}
+        \Large{\textbf{Computer Vision #1 \\ } }
+        \vspace{5pt}
+        \normalsize{Xin Wang \\ 
+        \today}   
+        \vspace{15pt}
+\end{center}}
+
+\begin{document}
+    \maketitletwo[Question Pack] 
+
+    \section{Year 2018}
+    \textbf{Question 1(b):} 
+    \begin{enumerate}
+        \item Explain how the Hough transform could be used to find these curve segments.
+
+        This is possible using Generalised Hough Transform. As the curves are
+        defined by the equation $y = ax^2 + bx + c$, the equation can be used to
+        create a discrete voting space and perform voting in the parameter
+        space. 
+        
+        \item  Discuss how to limit the voting space to 2D to solve the above problem. What are the main 
+        advantages of using low dimensional voting spaces?
+
+        Low dimensional voting spaces reduces the computational complexity
+        required. This reduction in processing load means a faster feature
+        extraction. 
+    \end{enumerate}
+    
+
+    \textbf{Question 4(a):} Explain the term optical flow and the usual
+    assumptions in using it for motion analysis in an image sequence.   
+    \begin{itemize}
+        \item Optical flow is the motion (flow) of brightness patterns (optic) in videos.
+        \item Assumptions in optic flow:
+        \begin{itemize}
+            \item Brightness consistency: Pixel has constant brightness across
+            time  
+            \item Small motion: Between frames, motion is small 
+            \item Spatial coherence: Pixels move like their neighbours  
+        \end{itemize}
+    \end{itemize}
+    
+    \section{Year 2017}
+    \textbf{Question 1(c):} The features detected in the images will end up in a
+    database used for object recognition.
+    \begin{enumerate}
+        \item What are the two main challenges in object recognition? Provide two examples of each challenge.
+        
+        \begin{itemize}
+            \item Viewpoint variation: Objects viewed from different angles look
+            very different. E.g. cakes look different from the top and side. 
+
+            \item Occlusion: Objects can be obscured by other things that makes
+            it difficult to process and identify these objects. E.g. a hand
+            covering a cup.
+        \end{itemize}
+
+        \item List the 4 main steps for k-means clustering used in bag-of-features.
+        \begin{itemize}
+            \item Randomly initialize $K$ cluster centers
+            \item Iterate until convergence:
+            \item Assign each data point to the nearest center
+            \item Recompute each cluster center as the mean of all points
+            assigned to it
+        \end{itemize}
+    \end{enumerate}
+
+    \textbf{Question 2}
+    \begin{enumerate}
+        \item \begin{itemize}
+            \item  In the context of image sequence processing, what is feature and describe why local features are 
+            desired for tracking?
+
+            A feature is a piece of information that is relevant for solving a
+            computational task related to a certain application e.g. points,
+            edges and objects for computer vision. 
+
+            Local features are features in specific locations of the image e.g.
+            mountain peakss that are distinct and unique from any angles and brightness.
+
+            \item What are feature descriptors and why are they used over the original features?
+            
+            Feature descriptors are interest points encoded into a series of
+            numbers that acts as a numerical "fingerprint" to differentiate one
+            feature from another.
+
+            These are used over original features since feature descriptors have
+            much lower dimensions that original images and, this reduction in
+            dimensionality, reduces the processing overheads required.
+        \end{itemize}
+
+        \item \begin{itemize}
+            \item What is meant by the following when measuring tracking errors: TP, RN, FP, TN?
+            \begin{itemize}
+                \item TP: True positve - Model correctly predicts a positive class 
+                \item FP: False positive - Model incorrectly predicts a positive
+                class 
+                \item FN: False negative - Model incorrectly predicts a negative
+                class  
+                \item TN: True negative - Model correctly predicts a negative class 
+            \end{itemize}
+
+            \item How are precision and recall defined?
+            \begin{itemize}
+                \item Precision: Fraction of TP to sum of TP and FP
+                \item Recall: Fraction of TP to sum of TP and FN
+            \end{itemize}
+        \end{itemize}
+        
+    \end{enumerate}
+
+
+    
+\end{document}

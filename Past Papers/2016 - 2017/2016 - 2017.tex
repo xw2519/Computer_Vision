@@ -1,0 +1,114 @@
+\documentclass{article} 
+
+\usepackage[margin=0.5in]{geometry} 
+\usepackage{amsmath} 
+\usepackage{graphicx}  
+\usepackage[parfill]{parskip}
+
+\setlength{\parindent}{0cm}
+
+\newcommand{\sol}{\textbf{Solution}:} 
+\newcommand{\maketitletwo}[2][]{\begin{center}
+        \Large{\textbf{Computer Vision #1 \\ } }
+        \vspace{5pt}
+        \normalsize{Xin Wang \\ 
+        \today}   
+        \vspace{15pt}
+\end{center}}
+
+\begin{document}
+    \maketitletwo[2019 - 2020] 
+
+    \section{Question 2}
+    \textbf{Question 2.1}: 
+    \begin{enumerate}
+        \item In the context of image sequence processing, what is a feature and describe
+        why local features are desired for tracking?
+
+        \begin{itemize}
+            \item A feature is a piece of information relevant for solving a computational
+            task related to a certain application e.g. points, edges or objects. 
+            \item Local features (Keypoint features) are features that are in
+            specific locations of the  images e.g. mountain peaks or building
+            corners. These local features are unique and disinctive enough from
+            any angle, lighting and scale. 
+        \end{itemize}
+
+        \item What are feature descriptors and why are they used over the original
+        features?
+
+        Feature descriptors are interesting information encoded into a series of
+        numbers that acts as a numerical fingerprint to be used to differentiate
+        one feature from another. 
+
+        This is used over original features since feature descriptors are much
+        lower dimensions than the original image and, this reduction in
+        dimensionality, reduces the overheads in processing the images. 
+    \end{enumerate}
+
+    \textbf{Question 2.2}: 
+    \begin{enumerate}
+        \item What is meant by the following when measuring tracking errors?
+        \begin{itemize}
+            \item TP: True Positive - An outcome where the model correctly predicts the positive class
+            \item TN: True Negative - An outcome where the model correctly predicts the negative class
+            \item FN: False Negative - An outcome where the model incorrectly predicts the negative class
+            \item FP: False Positive - An outcome where the model incorrectly predicts the positive class
+        \end{itemize}
+
+        \item How are precision and recall defined?
+        \begin{itemize}
+            \item Precision: Fraction of relevant instances among the retrieved instances
+            \item Recall: Fraction of relevant instances that were retrieved
+        \end{itemize}
+    \end{enumerate}
+
+    \textbf{Question 2.3}: Describe the steps of the Harris corner detector, providing the necessary
+    equations in matrix form.
+
+    The process of the harris corner detector: 
+    \begin{enumerate}
+        \item Compute $x$ and $y$ derivatives of an image
+        $$
+            I_x = G_x \ast I; \quad I_y = G_y \ast I
+        $$
+        where $G$ is a filter e.g. Sobel filter 
+
+        \item At each pixel, compute the matrix $M$
+        $$
+            M = \sum_{x,y} w(x,y) \begin{bmatrix}
+                I_x^2 & I_x I_y \\ 
+                I_x I_y & I_y^2
+            \end{bmatrix}
+        $$
+
+        \item Calculate detector response
+        $$
+            R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2
+        $$
+
+        \item Detect interest points which are local maxima and whose response $R$ are
+        above a threshold
+    \end{enumerate}
+
+    \textbf{Question 2.4}: Propose a suitable framework to track the balloons in this sequence, taking into
+    consideration:
+    \begin{itemize}
+        \item What features you will use and how you will extract them.
+        \item How you would distinguish between balloons and clouds
+        \item A possible way to deal with a balloon disappearing from a few
+        frames due to it being blocked by another. This problem is
+        known as occlusion.
+    \end{itemize}
+
+    Possible features are patterns on the balloon, the balloon basket and the
+    outline of the balloon. These can be extracted using the SIFT feature
+    descriptor that takes in a $16 \times 16$ window to return a $4 \times 4$
+    keypoint descriptor. 
+
+    The balloons and clouds can be differentiated using shape and colour.
+
+    To detect occlusion, cache the windows and detect if the windows are
+    overlapping i.e. the balloons may block one another. If so, predict the
+    motion of the balloon using Kalman filter. 
+\end{document}

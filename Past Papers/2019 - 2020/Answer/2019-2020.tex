@@ -1,0 +1,119 @@
+\documentclass{article} 
+
+\usepackage{amsmath} 
+\usepackage{enumitem}
+\usepackage[margin=0.5in]{geometry} 
+\usepackage{graphicx} 
+\usepackage[parfill]{parskip}
+
+\setlength{\parindent}{0cm}
+
+\newcommand{\sol}{\textbf{Solution}:} 
+\newcommand{\maketitletwo}[2][]{\begin{center}
+        \Large{\textbf{Computer Vision Past Paper #1 \\ } }
+        \vspace{5pt}
+        \normalsize{Xin Wang \\ 
+        \today}   
+        \vspace{15pt}
+\end{center}}
+
+\begin{document}
+    \maketitletwo[2019 - 2020] 
+
+    \textbf{Question 1: Image Filtering}:
+    \begin{enumerate}[label=\alph*)]
+        \item  Prewitt filtering:
+        \begin{enumerate}[label=(\roman*)]
+            \item Write down the 3x3 horizontal Prewitt filter $h_x$ and vertical Prewitt filter $h_y$
+            \begin{gather*}
+                h_x = \begin{bmatrix}
+                    1&0&-1 \\
+                    1&0&-1 \\
+                    1&0&-1 
+                \end{bmatrix} \quad \text{ and } \quad 
+                h_y = \begin{bmatrix}
+                    1&1&1 \\
+                    0&0&0 \\
+                    -1&-1&-1 
+                \end{bmatrix}
+            \end{gather*}
+            
+            \item Perform convolution between the image and the filters. Write down the output.
+            \begin{gather*}
+                h_x = \begin{bmatrix}
+                    -3 & -1 & 0 & 1 & 3 \\ 
+                    -6 & -3 & 0 & 3 & 6 \\
+                    -9 & -6 & 0 & 6 & 9 \\ 
+                    -12 & -9 & 0 & 9 & 12 \\
+                    -9 & -7 & 0 & 7 & 9
+                \end{bmatrix} \quad \text{ and } \quad  
+                h_y = \begin{bmatrix}
+                    -3 & -5 & -6 & -5 & -3 \\
+                    -2 & -4 & -6 & -4 & -2 \\
+                    -2 & -4 & -6 & -4 & -2 \\ 
+                    -2 & -4 & -6 & -4 & -2 \\
+                    5 & 9 & 12 & 9 & 5
+                \end{bmatrix}
+            \end{gather*}
+
+            \item Explain how the Prewitt filter $h_x$ can be separated as two filters.
+            \begin{gather*}
+                h_x = \begin{bmatrix}
+                    1&0&-1 \\
+                    1&0&-1 \\
+                    1&0&-1 
+                \end{bmatrix} = \begin{bmatrix}
+                    1 \\ 1 \\ 1
+                \end{bmatrix} * \begin{bmatrix}
+                    1 & 0 & -1
+                \end{bmatrix}
+            \end{gather*}
+
+            \item In certain computer vision tasks (e.g. Harris corner detection), to calculate the
+            image gradient, Gaussian filtering is applied prior to Prewitt filtering. Explain the
+            motivation for performing Gaussian filtering.
+
+            Gaussian filtering is applied to a image would blur an image which
+            removes details and noise. By operating similarly to the mean
+            filter, this filter removes the noise which would affect the
+            performance of the edge detection filters like Prewitt Filter. 
+        \end{enumerate}
+
+        \item In certain computer vision tasks (e.g. Harris corner detection), to calculate the
+        image gradient, Gaussian filtering is applied prior to Prewitt filtering. Explain the
+        motivation for performing Gaussian filtering.
+        \begin{itemize}
+            \item To implement the kernel, how would you design the kernel size $K$?
+            \begin{gather*}
+                [ -\sigma *k, \sigma *k ]
+            \end{gather*}
+            
+            \item Suppose the Gaussian kernel size is $K \times K$ and the input
+            image size is $N \times N$, evaluate the computational complexity using the big O notation for two
+            implementations respectively: direct 2D Gaussian filtering and
+            separable filtering.
+            \begin{itemize}
+                \item Direct 2D Gaussian
+                \begin{gather*}
+                    \text{Multiplications}: K^2 N^2 \\
+                    \text{Summations}: N^2 (K^2 - 1) \\ 
+                    O(K^2 N^2)
+                \end{gather*}
+
+                \item Separable 2D Gaussian
+                \begin{gather*}
+                    \text{Multiplications}: 2K N^2 \\
+                    \text{Summations}: N^2 (2K - 1) \\ 
+                    O(2K N^2)
+                \end{gather*}
+            \end{itemize}
+        \end{itemize}
+    \end{enumerate} 
+
+
+
+
+    \textbf{Question 1B}: 
+    
+    ertert
+\end{document}

@@ -1,0 +1,114 @@
+\documentclass[9pt]{article}
+\usepackage{multicol}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage{hyperref}
+\usepackage[a4paper, total={7in, 10in}]{geometry}
+\usepackage[parfill]{parskip}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{amsmath, xparse}
+
+\setlength{\parindent}{0em}
+\graphicspath{ {./Images/} }
+
+\setlength{\columnsep}{1cm}
+\title{Computer Vision Cheat Sheet}
+
+\begin{document}
+\maketitle
+
+\begin{multicols}{2}
+    \section{Image Filtering}
+        \begin{enumerate}
+        \item  
+        \end{enumerate}
+
+    \columnbreak 
+
+    \section{Feature detection and description}
+        \subsection{Harris Corner Detector}
+        \begin{enumerate}
+            \item Process: 
+            \begin{itemize}
+                \item Compute $x$ and $y$ derivatives of an image
+                $$
+                    I_x = G_x \ast I; \quad I_y = G_y \ast I
+                $$
+                where $G$ is a filter e.g. Sobel filter 
+
+                \item At each pixel, compute the matrix $M$
+                $$
+                    M = \sum_{x,y} w(x,y) \begin{bmatrix}
+                        I_x^2 & I_x I_y \\ 
+                        I_x I_y & I_y^2
+                    \end{bmatrix}
+                $$
+
+                \item Calculate detector response
+                $$
+                    R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2
+                $$
+
+                \item Detect interest points which are local maxima and whose response $R$ are
+                above a threshold
+            \end{itemize}
+        \end{enumerate}
+
+        \subsection{SIFT}
+        \begin{enumerate}
+            \item Process:
+            \begin{itemize}
+                \item Detection of scale-space extrema 
+                \item Keypoint localisation 
+                \item Orientation assignment 
+                \item Keypoint descriptor
+            \end{itemize}
+        \end{enumerate}
+
+    
+
+
+    
+
+\end{multicols}
+
+\pagebreak
+
+\begin{multicols}{2}
+    \section{Image classification, detection and segmentation}
+
+    \columnbreak
+
+    \section{Motion estimation and tracking}
+    \subsection{Optic flow}
+    \begin{enumerate}
+        \item Optic flow assumptions:
+        \begin{itemize}
+            \item Brightness constancy: A pixel has constant brightness across time.
+            \item Small motion: Between frames, motion is small.
+            \item Spatial coherence: Pixels move like their neighbours i.e. flow is constant within a small neighbourhood.
+        \end{itemize}
+
+        \item Constraints:
+        \begin{itemize}
+            \item Brightness constancy assumption: 
+            $$
+                I(x + u,y + v,t + 1) = I(x,y,t)
+            $$
+            where $I$: Intensity, $(x,y,t)$: Spatial and temporal coordinates, $(u,v)$: Displacement
+
+            \item Small motion assumption:
+            $$
+                I(x+u,y+v,t+1) \approx I(x,y,t) + \frac{\partial I}{\partial x}u + \frac{\partial I}{\partial y}v + \frac{\partial I}{\partial t}
+            $$
+
+            \item Optical flow constraint equation (Combining both): 
+            $$
+                \frac{\partial I}{\partial x}u + \frac{\partial I}{\partial y}v + \frac{\partial I}{\partial t} = 0
+            $$
+        \end{itemize}
+    \end{enumerate}
+\end{multicols}
+
+\end{document}

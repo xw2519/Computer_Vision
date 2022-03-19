@@ -1,0 +1,110 @@
+\title{\vspace{-2.0cm} 60006 - Tutorial 5
+
+Object Detection, Motion}
+\author{
+        Xin Wang
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage[margin=0.5in]{geometry} 
+\usepackage{amsmath} 
+\usepackage{graphicx}  
+\usepackage[parfill]{parskip}
+
+\setlength{\parindent}{0em}
+
+\begin{document}
+\maketitle
+
+\section*{Question 1}
+
+\textbf{Question 1.1:} Calculate the aspect ratio (width to height ratio) of the ROIs.
+
+Aspect ratio:
+\begin{itemize}
+    \item A: $1:1$ 
+    \item B: $2:1$
+    \item C: $1:2$
+\end{itemize}
+
+\textbf{Question 1.2:}
+\begin{enumerate}
+    \item Count the number of ground truth persons in the figure.
+    
+    Number of ground truth person: $7$
+    
+    \item Calculate TP, FP, FN, precision and recall with a threshold of $0.9$.
+    \begin{itemize}
+        \item TP: 3 
+        \item FP: 0 
+        \item FN: 4
+    \end{itemize}
+
+    Precision: $1$
+
+    Recall: $\frac{3}{7}$
+\end{enumerate}
+
+\textbf{Question 1.3:} Calculate TP, FP, FN, precision and recall using thresholds of 0.6, 0.7, 0.8, 0.9 and 0.95. Fill in
+the following table.
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    Threshold & TP & FP & FN & Precision & Recall \\ \hline
+    0.6       & 7  & 2  & 0  & 0.78      & 1      \\ \hline
+    0.7       & 6  & 1  & 1  & 0.86      & 0.86   \\ \hline
+    0.8       & 4  & 0  & 3  & 1         & 0.57   \\ \hline
+    0.9       & 3  & 0  & 4  & 1         & 0.43   \\ \hline
+    0.95      & 1  & 0  & 6  & 1         & 0.14   \\ \hline
+    \end{tabular}
+\end{table}
+
+\pagebreak
+
+\textbf{Question 1.4:} Plot the precision-recall curve using the previous table.
+
+
+
+\textbf{Question 1.5:} Estimate the average precision using the precision-recall curve.
+
+\section*{Question 2}
+
+\textbf{Question 2.1:} Calculate the spatial and temporal image gradients at the shaded pixel using the finite
+differences.
+\begin{gather*}
+    I_x = \frac{I(x+1, y, t) - I(x-1, y, t)}{2} = \frac{1}{2} \\ 
+    I_y = \frac{I(x, y+1, t) - I(x, y-1, t)}{2} = \frac{1}{2} \\
+    I_t = I(x,y,t+1) - I(x,y,t) = -1
+\end{gather*}
+
+\textbf{Question 2.2:} Write down the optic flow constraint equation at the shaded pixel.
+\begin{gather*}
+    I_x u + I_y v + I_t = 0 \\ 
+    u + v = 0
+\end{gather*}
+
+\textbf{Question 2.3:} Can you solve the equation? If not, assume that the flow is constant with in $3 \times 3$
+neighbourhood, add an additional equation at the striped pixel and solve the flow.
+
+\section*{Question 3} 
+
+Video denoising is a process to remove noise and other imaging artefacts such as scratches from
+videos. Unlike single image denoising, where the only information available is in the current
+picture, video denoising can borrow information from adjacent time frames. In order to do this
+without introducing blur, video denoising requires accurate pixel-wise motion estimates. Describe
+your idea of a possible video denoising algorithm. The input is a noisy video of a moving object
+and the expected output is a clean video
+
+\begin{enumerate}
+    \item Estimate the optic flow between adjacent time frames using the Lucas-Kanade method.
+    \item For each image to be denoised, warp its adjacent frames to this image according to the optic
+    flow field
+    \item Perform denoising by averaging the current frame with the warped adjacent frames
+\end{enumerate}
+
+
+
+
+\end{document}

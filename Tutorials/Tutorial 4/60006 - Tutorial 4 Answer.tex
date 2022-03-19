@@ -1,0 +1,107 @@
+\title{\vspace{-2.0cm} 60006 - Tutorial 3
+
+Interest Point Detection}
+\author{
+        Xin Wang
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\usepackage[margin=0.5in]{geometry} 
+\usepackage{amsmath} 
+\usepackage{graphicx}  
+\usepackage[parfill]{parskip}
+
+\setlength{\parindent}{0em}
+
+\begin{document}
+\maketitle
+
+\section*{Question 1}
+
+\textbf{Question 1.1:} Calculate the derivative of $f(x)$ with respect to $x$.
+\begin{gather*}
+    \frac{dy}{dx} = \frac{e^x}{(e^x + 1)^2}
+\end{gather*}
+
+\textbf{Question 1.2:} Describe a problem with the sigmoid function when we
+train a neural network using the gradient descent algorithm.
+
+The problem is the Vanishing Gradient Problem which occurs during
+backpropagation when value of the weights are changed. When $f(x)$ saturates at
+either $0$ or $1$, its derivative $f'(x)$ becomes nearly $0$. This causes the
+learning process to be very slow and cause it to converge to their optimum. 
+
+\section*{Question 2}
+
+\textbf{Question 2.1:} 
+\begin{gather*}
+    \text{max}(\sigma(\text{max}(x,x)), \sigma(x)) \\ 
+    \text{max}(\sigma(x), \sigma(x)) \\ 
+    \sigma(x) = \frac{1}{1 + e^{-x}} 
+\end{gather*}
+
+\textbf{Question 2.2:} 
+\begin{gather*}
+    M.M.(M^2.N).N = O(M^4.N^2)
+\end{gather*}
+
+\textbf{Question 2.3:} 
+\begin{gather*}
+    \beta = 0: \frac{x}{2} \\ 
+    \beta = \infty: \begin{cases}
+        0, x < 0 \\
+        x, x \geq 0
+    \end{cases}
+\end{gather*}
+
+\pagebreak
+
+\section*{Question 3}
+
+\textbf{Question 3.1:} Check whether $p$ fulfils the properties of a probability
+vector, i.e. it is non-negative and its elements sum to 1.
+
+Given that $p_i = \frac{e^{c_i}}{\sum_k e^{c_k}}$:
+\begin{itemize}
+    \item The exponentials ensure the numerator and denominator are always
+    positive 
+    \item The sum in the denominators ensure the average always added up to $1$ 
+\end{itemize}
+
+\textbf{Question 3.2:} Derive the derivative. 
+
+
+
+\section*{Question 4}
+
+\textbf{Question 4.1:}
+
+Data shape and size:
+\begin{itemize}
+    \item Layer 1: $1 \times 24 \times 24 \times 20$ - $46.08 KB$
+    \item Layer 2: $1 \times 12 \times 12 \times 20$ - $11.52 KB$
+    \item Layer 3: $1 \times 8 \times 8 \times 50$ - $12.80 KB$
+    \item Layer 4: $1 \times 4 \times 4 \times 50$ - $3.20 KB$
+    \item Layer 5: $1 \times 1 \times 1 \times 500$ - $2.00 KB$
+    \item Layer 6: $1 \times 1 \times 1 \times 10$ - $0.04 KB$
+    \item Layer 7: $1$ - $0.004 KB$
+\end{itemize}
+
+\textbf{Question 4.2:} Calculate the receptive fields for neurons in the
+following layers and fill in the table.
+
+Receptive fields:
+\begin{itemize}
+    \item Layer 1: $5 \times 5$ 
+    \item Layer 2: $6 \times 6$ 
+    \item Layer 3: $1 \times 8 \times 8 \times 50$ 
+    \item Layer 4: $1 \times 4 \times 4 \times 50$ 
+    \item Layer 5: $1 \times 1 \times 1 \times 500$ 
+    \item Layer 6: $1 \times 1 \times 1 \times 10$ 
+    \item Layer 7: $1$ - $0.004 KB$
+\end{itemize}
+
+
+
+\end{document}
