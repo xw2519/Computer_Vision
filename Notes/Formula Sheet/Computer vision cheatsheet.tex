@@ -7,7 +7,9 @@
 \usepackage[parfill]{parskip}
 \usepackage{graphicx}
 \usepackage{multicol}
-\usepackage{amsmath, xparse}
+\usepackage{xparse}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsthm,mathtools}
 
 \setlength{\parindent}{0em}
 \graphicspath{ {./Images/} }
@@ -15,18 +17,230 @@
 \setlength{\columnsep}{1cm}
 \title{Computer Vision Cheat Sheet}
 
+\setlength{\columnsep}{0.5in}      % default=10pt
+\setlength{\columnseprule}{0.25pt}      % default=0pt (no line)
+
 \begin{document}
 \maketitle
 
-\begin{multicols}{2}
+\begin{multicols*}{2}
+    \raggedcolumns
+
     \section{Image Filtering}
+        \subsection{Convolution}
         \begin{enumerate}
-        \item  
+            \item Proof of associativity $f \ast (g \ast h) = (f \ast g) \ast h$:
+            
+            https://math.stackexchange.com/questions/
+            2170534/proof-of-associativity-of-convolution
         \end{enumerate}
 
-    \columnbreak 
+        \subsection{Smoothing}
+        \begin{enumerate}
+            \item Gaussian smoothing:
+            \begin{itemize}
+                \item A form of denoising to improve edge detection response 
+                
+                Larger $\sigma$ (more blurry) surpresses noise and results in smoother derivatives. 
 
-    \section{Feature detection and description}
+
+                \item Changing the scale in order to detect objects of different scales in images e.g. humans to buildings 
+                
+                Different $\sigma$ values finds edges at different scales. A large $\sigma$ detects large-scale edges and smooths out fine details. A small $\sigma$ detects fine features. 
+
+                \item Image augmentation for motion detection purposes 
+                
+                Images can be blurred to better train models to detect objects in motion as objects taken in still motion would not be representative of objects in motion
+            \end{itemize}
+        \end{enumerate}
+
+    \section{Edge detection}
+        \begin{enumerate}
+            \item Convolution process:
+            \begin{itemize}
+                \item Flip kernel (For 2D, both horizontally and vertically)
+                \item Multiply signal with flipped kernel 
+                \item Sum over the support of kernel
+                \item Divide by the size of the kernel
+            \end{itemize}
+            \item Edge detection filters:
+            \begin{itemize}
+                \item Sobel:
+                {\setlength{\mathindent}{0cm}}
+                \begin{gather*}
+                    h_{x} = \begin{bmatrix}
+                        -1 & 0 & 1 \\
+                        -2 & 0 & 2 \\
+                        -1 & 0 & 1
+                    \end{bmatrix} \\
+                    h_{y} = \begin{bmatrix}
+                        1 & 2 & 1 \\
+                        0 & 0 & 0 \\
+                        -1 & -2 & -1
+                    \end{bmatrix} 
+                \end{gather*}
+
+                \item Prewitt:
+                {\setlength{\mathindent}{0cm}}
+                \begin{gather*}
+                    h_{x} = \begin{bmatrix}
+                        1 & 0 & -1 \\
+                        1 & 0 & -1 \\
+                        1 & 0 & -1
+                    \end{bmatrix} \\
+                    h_{y} = \begin{bmatrix}
+                        1 & 1 & 1 \\
+                        0 & 0 & 0 \\
+                        -1 & -1 & -1
+                    \end{bmatrix} 
+                \end{gather*}
+            \end{itemize}
+
+            \item  Computational cost 
+            \begin{itemize}
+                \item Non-separable - $N \times N$ image with $K \times K$ filter:
+                \begin{gather*}
+                    \text{Multiplications: } K^2 N^2 \\ 
+                    \text{Additions: } (K^2 - 1) N^2 \\ 
+                    \text{O-notation: } O(K^2 N^2)
+                \end{gather*}
+
+                \item Separable filters - $N \times N$ image with $K \times 1$ and $1 \times K$ filter:: 
+                \begin{gather*}
+                    \text{Multiplications: } 2M N^2 \\ 
+                    \text{Additions: } 2(K - 1) N^2 \\ 
+                    \text{O-notation: } O(K N^2)
+                \end{gather*}
+            \end{itemize}
+
+            \item Gradient magnitude and orientation: 
+            \begin{gather*}
+                \text{Magnitude: } g = \sqrt{g_x^2 + g_y^2} \\
+                \text{Orientation: } \theta = \text{arctan2}(g_y, g_x)
+            \end{gather*}
+        \end{enumerate}
+
+        \subsection{Canny Edge detection}
+        \begin{enumerate}
+            \item Criteria for good edge detector:
+            \begin{itemize}
+                \item Good detection: Low probability of failing to mark real edge points and low probability to falsely mark non-edge points 
+                \item Good localisation: Points marked as edge points by operator should be as close as possible to center of true edge 
+                \item Single response: Only one response to a single edge 
+            \end{itemize}
+
+            \item Process:
+            \begin{itemize}
+                \item Perform Gaussian filtering to suppress noise 
+                \item Calculate the gradient magnitude and direction (Sobel or Prewitt)
+                \item Apply \textit{Non-Maximum Suppression} (NSM) to get a single response for each edge 
+                \item Perform \textit{hysteresis thresholding} to find potential edges  
+            \end{itemize}
+        \end{enumerate}
+
+        \subsection{NMS}
+        \begin{enumerate}
+            \item Algorithm goes through all the points on the gradient intensity matrix and finds the pixels with the maximum value in the edge directions
+            \item Process;
+            \begin{itemize}
+                \item Check whether pixel $q$ is local maximum along gradient direction 
+                \item Move to pixel $r$ and compare the gradient magnitudes between $q$ and $r$ 
+                \item Move to pixel $p$ and compare the gradient magnitudes between $q$ and $p$ 
+                \item If pixel $q$ is the local maximum, it is an edge point and suppress other pixels 
+                \item Suppression:
+                $$
+                    M(x,y) = \begin{cases}
+                        M(x,y) & \text{if local maximum} \\
+                        0 & \text{otherwise}
+                    \end{cases}
+                $$
+            \end{itemize}
+
+            \item Optimisations:
+            \begin{itemize}
+                \item If pixels $p$ and $r$ are not located in pixel lattice, use nearest neighbour or linear interpolation 
+                \item Round gradient direction into 8 possible angles 
+            \end{itemize}
+        \end{enumerate}
+
+        \subsection{Thresholding}
+        \begin{enumerate}
+            \item Converts magnitude map into a binary image (either edge or not) 
+            \item Hysteresis thresholding - Define two thresholds $t_{low}$ and $t_{high}$:
+            \begin{itemize}
+                \item If pixel gradient magnitude is $\geq t_{high}$ - It is accepted as edge pixel 
+                \item If pixel gradient magnitude is $< t_{low}$ - It is rejected 
+                \item If pxel between - Check neighbouring pixels. Accepted if connected to edge pixel. 
+                \item Repeated until all pixels are accepted or rejected
+            \end{itemize}
+        \end{enumerate}
+
+    \section{Feature/Interest point detection and description}
+        \subsection{Hough Transform}
+        \begin{enumerate}
+            \item Feature extraction algorithm - Obtain a parametric representaiton of a line given \textbf{edge points}
+            
+            \item General idea:
+            \begin{itemize}
+                \item Detect some shapes or objects
+                \item There are two spaces, the image space and the parameter space (Hough space)
+                \begin{itemize}
+                    \item If the shape can be described by some parameters using an analytical equation, we 
+                    use this equation to perform voting to the parameter space.
+                    \item If it is not a simple shape without an analytical equation, as long as we have a model 
+                    to describe it, we can still vote.
+                \end{itemize}
+            \end{itemize}
+
+            \item Line detection process:
+            \begin{itemize}
+                \item Initialise the bins $H(\rho, \theta)$ to all zeros 
+                \item For each edge points (x,y):
+                \begin{itemize}
+                    \item For $\theta$ from $0$ to $\pi$
+                    \begin{itemize}
+                        \item Calculate $\rho = x\cos(\theta) + y\sin(\theta)$
+                        \item Accumulate $H(\rho, \theta) = H(\rho, \theta) + 1$
+                    \end{itemize}
+                \end{itemize}
+                \item Find $(\rho, \theta)$ where $H(\rho, \theta)$ is a local maximum and larger than a threshold 
+                
+                Thresholding to ensure a few random points would not lead to a line being detected 
+
+                \item Detected lines are defined by $\rho = x\cos(\theta) + y\sin(\theta)$
+            \end{itemize}
+
+            \item Circle detection process (radius known):
+            \begin{itemize}
+                \item The circle is defined as: $(a-x)^2 + (b-y)^2 = r^2$ 
+                \item For each edge point $(x,y)$, only need to vote for possible values of $(a,b)$ 
+            \end{itemize}
+
+            \item Circle detection process (radius unknown):
+            \begin{itemize}
+                \item 3D parameter space $H(a,b,r)$
+                \item Set range for radius $r$
+                \item For each $r \in [r_{min}, r_{max}]$
+                \begin{itemize}
+                    \item For each edge point $(x,y)$: Vote for possible values of $(a,b)$ and accumulate $H(a,b,r)$
+                \end{itemize}
+            \end{itemize}
+
+            \item Properties:
+            \begin{itemize}
+                \item Robust to noise:
+                \begin{itemize}
+                    \item Edge map often generated after image smoothing 
+                    \item Broken edge points can still vote and contribute to line detection 
+                \end{itemize}
+
+                \item Robust to object occlusion
+                \begin{itemize}
+                    \item Remaining edge points can still vote and contribute to line detection
+                \end{itemize}
+            \end{itemize}
+        \end{enumerate}
+
         \subsection{Harris Corner Detector}
         \begin{enumerate}
             \item Process: 
@@ -37,26 +251,123 @@
                 $$
                 where $G$ is a filter e.g. Sobel filter 
 
-                \item At each pixel, compute the matrix $M$
+                \item At each pixel, compute the matrix $K$
                 $$
-                    M = \sum_{x,y} w(x,y) \begin{bmatrix}
+                    K = \sum_{x,y} w(x,y) \begin{bmatrix}
                         I_x^2 & I_x I_y \\ 
                         I_x I_y & I_y^2
                     \end{bmatrix}
                 $$
 
                 \item Calculate detector response
-                $$
-                    R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2
-                $$
+                \begin{gather*}
+                    R = \lambda_1 \lambda_2 - k(\lambda_1 + \lambda_2)^2 \\
+                    R = \text{det}(K) - k(\text{tr}(K))^2
+                \end{gather*}
 
                 \item Detect interest points which are local maxima and whose response $R$ are
                 above a threshold
+            \end{itemize}
+
+            \item Properties:
+            \begin{itemize}
+                \item Invariant to rotation 
+                \item \textbf{Not} invariant to scale. 
+            \end{itemize}
+        \end{enumerate}
+
+        \subsection{Scale-invariant Harris Corner Detector}
+        \begin{enumerate}
+            \item Process:
+            \begin{itemize}
+                \item For each $\sigma$
+                \begin{itemize}
+                    \item Perform Gaussian smoothing with $\sigma$
+                    \item Calculate $x$ and $y$ derivatives of the smoothed image $I_x(\sigma)$ and $I_y(\sigma)$
+                    \item At each pixel, compute the matrix M 
+                \end{itemize}
+            \end{itemize}
+            $$
+            M = \sum_{x,y} w(x,y)\sigma^2 \begin{bmatrix}
+                I_x^2(\sigma) & I_x(\sigma) I_y(\sigma) \\ 
+                I_x(\sigma)I_y(\sigma) & I_y^2(\sigma)
+            \end{bmatrix}
+            $$
+        \end{enumerate}
+        
+        \subsection{DoG}
+        \begin{enumerate}
+            \item Gaussian filter:
+            $$
+                G(x,y,\sigma) = \frac{1}{2\pi \sigma^2} e^{-\frac{x^2+y^2}{2\sigma^2}}
+            $$
+
+            \item Laplacian operator:
+            $$
+                \nabla^2 G = \frac{\partial ^2 G}{\partial x^2} + \frac{\partial^2 G}{\partial y^2}
+            $$
+
+            \item Heat diffusion equation and proof:
+            {\setlength{\mathindent}{0cm}}
+            \begin{gather*}
+                G(x,y,\sigma) = \frac{1}{2 \pi \sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}} \\
+                \frac{\partial G}{\partial \sigma} = \frac{1}{2\pi \sigma^3}\left(\frac{x^2+y^2}{\sigma^2} - 1\right)e^{-\frac{x^2+y^2}{2\sigma^2}} \\
+                \frac{\partial G}{\partial x} = -\frac{1}{2\pi \sigma^4} x e^{-\frac{x^2+y^2}{2\sigma^2}} \\ 
+                \frac{\partial^2 G}{\partial x^2} = \frac{1}{2\pi \sigma^4} \left(\frac{x^2}{\sigma^2} - 1\right)e^{-\frac{x^2+y^2}{2\sigma^2}} \\ 
+                \frac{\partial^2 G}{\partial y^2} = \frac{1}{2\pi \sigma^4} \left(\frac{y^2}{\sigma^2} - 1\right)e^{-\frac{x^2+y^2}{2\sigma^2}} \\
+                \frac{\partial^2 G}{\partial x^2} + \frac{\partial^2 G}{\partial y^2} = \frac{1}{2\pi \sigma^4} \left(\frac{x^2 + y^2}{\sigma^2} - 2\right) e^{-\frac{x^2+y^2}{2\sigma^2}} \\
+                \frac{\partial G}{\partial \sigma} = \sigma \left(\frac{\partial^2 G}{\partial x^2} + \frac{\partial^2 G}{\partial y^2} \right) = \sigma \nabla^2 G
+            \end{gather*}
+
+            \item Relationship between $DoG(x,y,\sigma)$ and scale normalised Laplacian of Gaussian $\sigma^2 \nabla^2 G$
+            {\setlength{\mathindent}{0cm}}
+            \begin{gather*}
+                DoG(x,y,\sigma) = G(k\sigma) - G(\sigma) \\ 
+                \frac{\partial G}{\partial \sigma} \approx \frac{G(k\sigma) - G(\sigma)}{k\sigma - \sigma} \\
+                \frac{\partial G}{\partial \sigma} = \sigma \nabla^2 G \\ 
+                DoG(x,y,\sigma) = G(k\sigma) - G(\sigma) \\ 
+                DoG(x,y,\sigma) \approx (k-1)\sigma^2\nabla^2G
+            \end{gather*}
+
+            $DoG(x,y,\sigma)$ is proportional to $\sigma^2\nabla^2G$ with constant $k-1$
+        \end{enumerate}
+
+        \subsection{Feature description}
+        \begin{enumerate}
+            \item Simple descriptors:
+            \begin{itemize}
+                \item Pixel intensity: 
+                \begin{itemize}
+                    \item Simple to use 
+                    \item Sensitive to absolute intensity value - Changes under different illuminations 
+                    \item Not very discriminative - Single pixel does not represent any local content
+                \end{itemize}
+
+                \item Patch intensities 
+                \begin{itemize}
+                    \item Performs well if images are of similar intensities and roughly aligned 
+                    \item Sensities to absolute intensity value 
+                    \item Not rotation invariant 
+                \end{itemize}
+
+                \item Gradient orientation 
+                \begin{itemize}
+                    \item Robust to orientation 
+                    \item Not rotation invariant 
+                \end{itemize}
+
+                \item Intensity histogram of patch 
+                \begin{itemize}
+                    \item Robust to rotation and scaling 
+                    \item Sensitive to intensity changes 
+                \end{itemize}
             \end{itemize}
         \end{enumerate}
 
         \subsection{SIFT}
         \begin{enumerate}
+            \item Combines histogram and gradient orientation 
+            
             \item Process:
             \begin{itemize}
                 \item Detection of scale-space extrema 
@@ -66,21 +377,96 @@
             \end{itemize}
         \end{enumerate}
 
-    
+        \subsection{RANSAC}
+        \begin{enumerate}
+            \item Process: 
+            \begin{itemize}
+                \item For each iteration:
+                \begin{itemize}
+                    \item Select random sample points
+                    \item Fit a model
+                    \item Based on the model, check how many points are inliers
+                    \item Terminate after a certain number of iterations or enough inliers have been found
+                \end{itemize}
+            \end{itemize}
+        \end{enumerate}
+
+        \subsection{SURF}
+        \begin{enumerate}
+            \item Only calculates the gradients along horizontal and vertical directions by using the Haar
+            wavelets instead of usign histograms of gradient orientations for describing local features
+            \item This speeds up evaluation of gradient orientation 
+        \end{enumerate}
+
+        \subsection{BRIEF}
+        \begin{enumerate}
+            \item In SURF, compare a local region to another and calculate the difference, which is a floating point number
+            \item In BRIEF, we compare a point $p$ to another point $q$ and get a binary value as output.
+            \item Assumptions:
+            \begin{itemize}
+                \item Ignore rotation and scale invariances - assumes images are taken from a moving camera that only involves translation
+            \end{itemize}
+        \end{enumerate}
 
 
-    
-
-\end{multicols}
-
-\pagebreak
-
-\begin{multicols}{2}
     \section{Image classification, detection and segmentation}
+    \subsection{HOG}
+    \begin{itemize}
+        \item Extend feature description to a whole image or image region 
+        \item Divides a large region into a dense grid of cells, describes each cell, then concatenate these local descriptions to form a 
+        global description
+        \item In comparision to SIFT:
+        \begin{itemize}
+            \item Both use gradient orientation histograms for feature description
+            \item Difference is that HOG describes features for a large image region, instead of just around a point.
+        \end{itemize}
+        \item Process:
+        \begin{itemize}
+            \item Divide the image into equally spaced cells
+            \item Describe the content there using orientation histograms
+            \item Move to next block
+            \item For each block, the descriptor vector $v$ is normalised 
+            \item HOG descriptor formed by concatenating the normalised local descriptors for all blocks 
+        \end{itemize}
+    \end{itemize}
 
-    \columnbreak
+    \subsection{Image classification}
+    \begin{itemize}
+        \item Pipeline:
+        \begin{itemize}
+            \item Feature extraction - Transform input images into low-dimensional vectors to be compared or matched 
+            \item Classifier - Trained with a dataset consisting of images and labels 
+        \end{itemize}
 
-    \section{Motion estimation and tracking}
+        \item Pre-processing operations:
+        \begin{itemize}
+            \item Detecting where feature is in bigger image 
+            \item Normalising size of image 
+            \item Normalise the location, placing the mass center at the center of image 
+            \item Slant correction 
+        \end{itemize}
+    \end{itemize}
+
+    \subsection{Neural networks}
+    \begin{enumerate}
+        \item Exploding gradient problem:
+        
+        The gradient becomes very large, preventing the algorithm from converging. The solution is gradient clipping either by norm or value.
+
+
+        \item Vanishing gradient problem:
+        
+        The sigmoid function suffers from the vanishing gradient problem. When $f(x)$ saturates at either $0$ or $1$, its derivative $f'(x)$ becomes nearly $0$.
+
+        \item Precision and recall:
+        \begin{gather*}
+            \text{Recall} = \frac{TP}{TP + FN} \\ 
+            \text{Precision} = \frac{TP}{TP + FP} 
+        \end{gather*}
+            
+    \end{enumerate}
+
+    \section{Motion estimation}
     \subsection{Optic flow}
     \begin{enumerate}
         \item Optic flow assumptions:
@@ -109,6 +495,166 @@
             $$
         \end{itemize}
     \end{enumerate}
-\end{multicols}
+
+    \subsection{Lucas-Kanade method}
+    \begin{enumerate}
+        \item Spatial coherence assumption: Flow is constant within a small neighbourhood
+        \item Aperture problem:
+        \begin{itemize}
+            \item Looking through an aperture (hole), the motion of a line is ambiguous, because the motion component parallel to the line cannot be 
+            inferred based on the visual input
+            \item Motion of a corner is clearer to define, even through the aperture
+        \end{itemize}
+
+        \item Process:
+        \begin{itemize}
+            \item Compute the image gradient $I_x$, $I_y$ (finite difference between neighbouring pixels) and $I_t$ (finite difference between neighbouring time frames)
+            \item For each pixel:
+            \begin{itemize}
+                \item Calculate the following matrix for pixels in its neighbourhood
+                $$
+                    A^tA = \sum_p \begin{bmatrix}
+                        I_x^2 & I_x I_y \\ 
+                        I_x I_y & I_y^2
+                    \end{bmatrix}
+                $$
+
+                \item Calculate the optic flow for this pixel 
+                $$
+                    \begin{bmatrix}
+                        u \\ v
+                    \end{bmatrix} = (A^t A)^{-1} A^T b
+                $$
+            \end{itemize}
+        \end{itemize}
+    \end{enumerate}
+
+    \subsection{Multi-scale framework}
+    \begin{enumerate}
+        \item Suppose an estimate of the flow field $u^{(4)}, v^{(4)}$ for image $I$ and $J$ is obtained 
+        at scale 4.
+
+        \item When moving to scale 3, the flow field becomes $2u^{(4)},
+        2v^{(4)}$. This will provide the initial values of the calculation at
+        scale 3.
+        
+        \item Only need to calculate the incremental flow for the following two images:
+        \begin{itemize}
+            \item Image $I(x,y)$
+            \item Image $J_{wraped} = J(x + 2u^{(4)}), y + 2v^{(4)}$
+        \end{itemize}
+
+        \item Accumulate the flow estimation 
+    \end{enumerate}
+
+    \subsection{Multi-scale Lucas-Kanade method}
+    \begin{enumerate}
+        \item To estimate large motion, multi-scale/multi-resolution framework is used 
+        
+        Although the motion is large in the original resolution, it will look small in a 
+        downsampled resolution.
+
+        \item Process:
+        \begin{itemize}
+            \item For scale $l$ from coarse to fine 
+            \begin{itemize}
+                \item Initial guess at scale $l$ by upsampling the flow estimate
+                previous scale $l+1$ 
+                $$
+                    u^{(l)} = 2u^{(l+1)}, v^{(l)} = 2v^{(l+1)}
+                $$
+                \item Compute the wraped image 
+                $$
+                    J_{wraped}^l = J^l (x + u^{(l)}), y + v^{(l)}
+                $$
+
+                \item For image $I^l$ and $J_{wraped}^l$ at this scale, compute
+                image gradients $I_x$, $I_y$ and $I_t$
+                \begin{itemize}
+                    \item $I_x$, $I_y$ are calculated from image $I^l$
+                    \item $I_t = J_{wraped}^l (x,y) - I^l(x,y)$
+                \end{itemize}
+
+                \item Estimate the incremental flow
+                $$
+                    \begin{bmatrix}
+                        u^{\delta} \\ v^{\delta}
+                    \end{bmatrix} = (A^T A)^{-1} A^T b
+                $$
+
+                \item Update the flow at this scale
+                $$
+                    u^{(l)} = 2u^{(l+1)} + u^\delta, v^{(l)} = 2v^{(l+1)} + v^{\delta}
+                $$
+            \end{itemize}
+        \end{itemize}
+    \end{enumerate}
+
+    \subsection{Horn-Schunck method}
+    \begin{enumerate}
+        \item It is an optimisation-based method, which defines a global energy functional (i.e. a cost function) for the flow.
+        \item The Horn-Schunck method optimises the energy functional with
+        regard to $u$ and $v$
+        \item It aims to enforce the optic flow constraint, while at the same time achieves 
+        a smooth flow field
+        \item Process:
+        \begin{itemize}
+            \item Compute the image gradients $I_x, I_y$ and $I_t$
+            \item Intialise the flow field $u=0, v=0$
+            \item For each iteration $k$:
+            \begin{itemize}
+                \item Calculate the average flow field 
+                $$
+                    \overline{u}^{(k)}, \overline{v}^{(k)}
+                $$
+                \item Update the flow field
+                \begin{gather*}
+                    u^{(k+1)} = \overline{u}^{(k)} - \frac{I_x (I_x \overline{u}^{(k)} + I_y \overline{v}^{(k)} + I_t)}{I_x^2 + I_y^2 + \alpha} \\
+                    v^{(k+1)} = \overline{v}^{(k)} - \frac{I_y (I_x \overline{u}^{(k)} + I_x \overline{v}^{(k)} + I_t)}{I_x^2 + I_y^2 + \alpha}
+                \end{gather*}
+
+                \item Terminate if the change of value is smaller than a threshold or the maximum number 
+                of iterations is reached.
+            \end{itemize}
+        \end{itemize}
+    \end{enumerate}
+
+    \subsection{Flow evaluation}
+    \begin{itemize}
+        \item Image classification: manually annotate label class
+        \item Object detection: manually annotate label class and bounding box
+        \item Segmentation: manually annotate label class for each pixel
+        \item Optic flow methods:
+        \begin{itemize}
+            \item Generate the ground truth flow field between two time frames -
+            Using external data or generating synthetic data
+            \item Compare the difference between estimation and ground truth.
+            \begin{itemize}
+                \item Average endpoint error (EE)
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+
+    \section{Motion tracking}
+    \begin{enumerate}
+        \item Spatial and temporal image gradients: 
+        \begin{gather*}
+            I_x = \frac{I(x+1,y,t) - I(x-1,y,t)}{2} \\ 
+            I_y = \frac{I(x,y+1,t) - I(x,y-1,t)}{2} \\ 
+            I_t = I(x,y,t+1) - I(x,y,t)
+        \end{gather*}
+    \end{enumerate}
+
+    \subsection*{Lucas-Kanade tracker}
+    \begin{enumerate}
+        \item Lucas-Kanade aims to estimate the motion from the template image $I$ to 
+        the image $J$ in the next time frame 
+        \item With brightness constancy constraint, optimisation problem 
+        $$
+            \text{min}_{u,v} E(u,v) = \sum_x \sum_y [I(x,y) - J(x+u, y+v)]^2
+        $$
+    \end{enumerate}
+    
+\end{multicols*}
 
 \end{document}
