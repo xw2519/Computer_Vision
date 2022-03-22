@@ -33,6 +33,22 @@
             
             https://math.stackexchange.com/questions/
             2170534/proof-of-associativity-of-convolution
+
+            \item Prove the associativity property for 1D discrete convolution
+        \end{enumerate}
+        \begin{align*}
+            f \ast (h_1 \ast h_2) &= \sum_{j = -\infty}^\infty f[j] \sum_{k=-\infty}^\infty h_1[k] h_2[i-j-k] \\ 
+            &= \sum_{j = -\infty}^\infty \sum_{k=-\infty}^\infty f[j] h_1[i-j-k] h_2[k] \\ 
+            &= \sum_{k = -\infty}^\infty \sum_{j=-\infty}^\infty f[j] h_1[i-j-k] h_2[k] \\ 
+            &= \sum_{k = -\infty}^\infty (f \ast h_1)[i-k] h_2[k] \\ 
+            &= (f \ast h_1) \ast h_2
+        \end{align*}
+        \begin{enumerate}
+            \setcounter{enumi}{3}
+            \item Properties
+            \begin{itemize}
+                \item Translation invariant - Shares weights in kernel 
+            \end{itemize}
         \end{enumerate}
 
         \subsection{Smoothing}
@@ -44,14 +60,33 @@
                 Larger $\sigma$ (more blurry) surpresses noise and results in smoother derivatives. 
 
 
-                \item Changing the scale in order to detect objects of different scales in images e.g. humans to buildings 
+                \item Used with Harris detector to change the scale in order to detect objects of different scales in images e.g. humans to buildings 
                 
-                Different $\sigma$ values finds edges at different scales. A large $\sigma$ detects large-scale edges and smooths out fine details. A small $\sigma$ detects fine features. 
+                Different $\sigma$ values finds edges at different scales. Since the Harris detector is not invariant to scale, a corner could be detected as an edge if it's too
+                big/wide. Hence, we need to use the Gaussian filter to scale the edges at different levels (thus
+                search on both spatial and scale domain) and find the response at the most suitable scale
 
                 \item Image augmentation for motion detection purposes 
                 
                 Images can be blurred to better train models to detect objects in motion as objects taken in still motion would not be representative of objects in motion
             \end{itemize}
+        \end{enumerate}
+
+        \subsection{Separable filter}
+        \begin{enumerate}
+            \item Show that the 2D Gaussian filter is a separate filter.
+            \begin{align*}
+                f[x,y] * h[x,y] &= \sum_i \sum_j f[x-i, y-j].h[i,j] \\ 
+                &= \sum_i \sum_j f[x-i, y-j] . \frac{1}{2\pi \sigma^2} e^{- \frac{i^2 + j^2}{2\sigma^2}} \\
+                &= \sum_i \left(\sum_f f[x-i, y-j].\frac{1}{\sqrt{2\pi} \sigma} e^{-\frac{j^2}{2\sigma^2}}\right) . \frac{1}{\sqrt{2\pi}\sigma} e^{- \frac{i^2}{2\sigma}} \\ 
+                &= \sum_i f \ast h_y[x-i].\frac{1}{\sqrt{2\pi}\sigma} e^{- \frac{i^2}{2\sigma^2}} \\ 
+                &= (f \ast h_y) \ast h_x
+            \end{align*}
+        \end{enumerate}
+
+        \subsection{Median filtering}
+        \begin{enumerate}
+            \item 
         \end{enumerate}
 
     \section{Edge detection}
@@ -408,7 +443,6 @@
             \end{itemize}
         \end{enumerate}
 
-
     \section{Image classification, detection and segmentation}
     \subsection{HOG}
     \begin{itemize}
@@ -463,12 +497,38 @@
             \text{Recall} = \frac{TP}{TP + FN} \\ 
             \text{Precision} = \frac{TP}{TP + FP} 
         \end{gather*}
+
+        \item ReLU problem:
+        \begin{itemize}
+            \item For negative $x$, the gradient is 0 which means nothing
+            changes during gradient descent. Solution is Leaky ReLU. 
+        \end{itemize}
             
     \end{enumerate}
 
     \section{Motion estimation}
     \subsection{Optic flow}
     \begin{enumerate}
+        \item Over determined: More equations than unknowns which is estimated using least square method
+        $$
+            x = \text{argmin}_x||Ax - b||^2
+        $$
+
+        \item Least square solution given by:
+        \begin{gather*}
+            x = (A^T A)^{-1} A^T b \\ 
+            x = \begin{bmatrix}
+                u \\ v
+            \end{bmatrix} \\ 
+            A^T A = \sum_p \begin{bmatrix}
+                I_x^2 & I_x I_y \\ 
+                I_x I_y & I_y^2
+            \end{bmatrix} \\ 
+            A^T b = -\sum_p \begin{bmatrix}
+                I_x I_t \\ I_y I_t
+            \end{bmatrix}
+        \end{gather*}
+
         \item Optic flow assumptions:
         \begin{itemize}
             \item Brightness constancy: A pixel has constant brightness across time.
